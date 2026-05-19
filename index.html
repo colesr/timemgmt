@@ -8,15 +8,28 @@
   :root {
     --bg: #fafafa;
     --card: #ffffff;
+    --card-hover: #fcfcfd;
     --border: #ececec;
+    --border-strong: #d4d4d4;
     --text: #1a1a1a;
     --muted: #6b7280;
+    --subtle: #f3f4f6;
     --accent: #2563eb;
+    --accent-soft: #eff6ff;
     --accent-hover: #1d4ed8;
     --danger: #b91c1c;
-    --danger-hover: #991b1b;
-    --shadow: 0 1px 2px rgba(0,0,0,0.04);
+    --danger-soft: #fef2f2;
+    --warn: #ca8a04;
+    --ok: #16a34a;
+    --planning: #9ca3af;
+    --active: #16a34a;
+    --hold: #ca8a04;
+    --done: #6b7280;
     --radius: 8px;
+    --radius-lg: 12px;
+    --t-fast: 140ms;
+    --t-base: 220ms;
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -28,192 +41,471 @@
     -webkit-font-smoothing: antialiased;
   }
   .wrap {
-    max-width: 720px;
+    max-width: 760px;
     margin: 0 auto;
-    padding: 2.5rem 1.25rem 4rem;
+    padding: 2.25rem 1.25rem 4rem;
   }
-  header.app {
-    margin-bottom: 2rem;
+
+  /* header */
+  header.app { margin-bottom: 1.25rem; }
+  .brand-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.4rem;
   }
-  header.app h1 {
-    font-size: 1.5rem;
+  .brand {
+    font-size: 1.35rem;
     font-weight: 600;
-    margin: 0 0 0.25rem;
     letter-spacing: -0.01em;
   }
-  header.app .date {
+  .date {
     color: var(--muted);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
+  .crumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    color: var(--muted);
+    font-size: 0.88rem;
+    min-height: 1.5rem;
+  }
+  .crumbs a {
+    color: var(--muted);
+    text-decoration: none;
+    border-radius: 4px;
+    padding: 0.1rem 0.35rem;
+    margin: 0 -0.35rem;
+    transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+  }
+  .crumbs a:hover { color: var(--text); background: var(--subtle); }
+  .crumbs .sep { color: var(--border-strong); }
+  .crumbs .current { color: var(--text); font-weight: 500; }
+
+  /* running bar */
+  .running-bar {
+    margin-top: 0.75rem;
+    background: var(--accent-soft);
+    border: 1px solid #dbeafe;
+    border-radius: var(--radius);
+    padding: 0.55rem 0.75rem 0.55rem 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 0.9rem;
+    animation: fadeUp var(--t-base) var(--ease);
+  }
+  .running-bar .pulse-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+    animation: pulseRing 1.6s ease-out infinite;
+  }
+  .running-bar .label { flex: 1; color: var(--text); }
+  .running-bar .label .sub { color: var(--muted); }
+  .running-bar .live {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .running-bar .stop-btn {
+    background: #fff;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.85rem;
+    transition: background var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+  }
+  .running-bar .stop-btn:hover { background: #dbeafe; }
+  .running-bar .stop-btn:active { transform: scale(0.97); }
+
+  /* main view container */
+  main { position: relative; }
+  .view {
+    animation: fadeUp var(--t-base) var(--ease);
+  }
+  .view.leaving { animation: fadeDown var(--t-fast) var(--ease) forwards; }
+
+  /* sections */
   section {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.25rem 1rem;
-    margin-bottom: 1.25rem;
+    border-radius: var(--radius-lg);
+    padding: 1.1rem 1.15rem 0.9rem;
+    margin-bottom: 1.1rem;
+    transition: border-color var(--t-fast) var(--ease);
   }
   section h2 {
-    margin: 0 0 1rem;
-    font-size: 0.8rem;
+    margin: 0 0 0.85rem;
+    font-size: 0.72rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     color: var(--muted);
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: 0 0 0.85rem;
+  }
+  .section-head h2 { margin: 0; }
+  .section-head .head-meta {
+    color: var(--muted);
+    font-size: 0.8rem;
   }
   .empty {
     color: var(--muted);
     font-size: 0.9rem;
-    padding: 0.5rem 0 0.75rem;
+    padding: 0.4rem 0 0.6rem;
   }
 
-  /* activities */
-  .activity {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.65rem 0;
-    border-top: 1px solid var(--border);
+  /* hero (portfolio / project header) */
+  .hero {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.25rem 1.1rem;
+    margin-bottom: 1.1rem;
+    animation: fadeUp var(--t-base) var(--ease);
   }
-  .activity:first-child { border-top: none; }
-  .dot {
-    width: 10px; height: 10px; border-radius: 50%;
+  .hero-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    margin-bottom: 0.5rem;
+  }
+  .hero .dot-lg {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    margin-top: 0.45rem;
     flex-shrink: 0;
   }
-  .activity .name {
+  .hero h1 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    flex: 1;
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 0.05rem 0.3rem;
+    margin-left: -0.3rem;
+    transition: background var(--t-fast) var(--ease);
+  }
+  .hero h1:hover { background: var(--subtle); }
+  .hero .hero-actions { display: flex; gap: 0.25rem; }
+  .hero .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem 1rem;
+    margin-top: 0.35rem;
+    color: var(--muted);
+    font-size: 0.88rem;
+    align-items: center;
+  }
+  .hero .desc {
+    margin-top: 0.7rem;
+    color: var(--text);
+    font-size: 0.92rem;
+    white-space: pre-wrap;
+    line-height: 1.55;
+  }
+  .hero .desc.empty-desc {
+    color: var(--muted);
+    font-style: italic;
+    cursor: pointer;
+  }
+  .hero .progress-wrap {
+    margin-top: 0.85rem;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .progress {
+    background: var(--subtle);
+    border-radius: 999px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .progress > div {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 999px;
+    width: 0;
+    transition: width 600ms var(--ease), background var(--t-base) var(--ease);
+  }
+  .progress.over > div { background: var(--warn); }
+
+  /* status badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 1.3;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--muted);
+  }
+  .badge .badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .badge.s-planning { color: #6b7280; }
+  .badge.s-active   { color: var(--ok); border-color: #dcfce7; background: #f0fdf4; }
+  .badge.s-hold     { color: var(--warn); border-color: #fef3c7; background: #fffbeb; }
+  .badge.s-done     { color: #6b7280; background: var(--subtle); border-color: var(--border); }
+  .due-soon { color: var(--warn); }
+  .due-overdue { color: var(--danger); }
+
+  /* generic cards (portfolios, projects) */
+  .card-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.85rem 0.95rem;
+    cursor: pointer;
+    transition: transform var(--t-fast) var(--ease),
+                border-color var(--t-fast) var(--ease),
+                background var(--t-fast) var(--ease);
+    animation: fadeUp var(--t-base) var(--ease) both;
+    text-align: left;
+    display: block;
+    width: 100%;
+    font: inherit;
+    color: inherit;
+  }
+  .card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-1px);
+    background: var(--card-hover);
+  }
+  .card:active { transform: translateY(0); }
+  .card.new-row { animation: flashIn 1200ms var(--ease); }
+  .card-top {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .card .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .card .title {
     flex: 1;
     font-weight: 500;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .card .right {
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .card .sub {
+    margin-top: 0.4rem;
+    color: var(--muted);
+    font-size: 0.83rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.85rem;
+    align-items: center;
+  }
+  .card .mini-progress {
+    margin-top: 0.55rem;
+    height: 4px;
+    background: var(--subtle);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .card .mini-progress > div {
+    height: 100%; width: 0;
+    background: var(--accent);
+    border-radius: 999px;
+    transition: width 600ms var(--ease);
+  }
+
+  /* activities (project view) */
+  .activity {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0;
+    border-top: 1px solid var(--border);
+    animation: fadeUp var(--t-base) var(--ease) both;
+  }
+  .activity:first-child { border-top: none; }
+  .activity.new-row { animation: flashIn 1200ms var(--ease); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .activity .name {
+    flex: 1; font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    cursor: pointer; border-radius: 4px;
+    padding: 0.1rem 0.3rem; margin: 0 -0.3rem;
+    transition: background var(--t-fast) var(--ease);
+  }
+  .activity .name:hover { background: var(--subtle); }
   .activity .today {
     font-variant-numeric: tabular-nums;
-    color: var(--muted);
-    font-size: 0.9rem;
+    color: var(--muted); font-size: 0.9rem;
+    transition: color var(--t-fast) var(--ease);
   }
   .activity.running .today { color: var(--accent); font-weight: 500; }
-  .activity .actions { display: flex; gap: 0.35rem; }
+  .activity.running .dot {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5);
+    animation: pulseRing 1.6s ease-out infinite;
+  }
+  .activity .actions { display: flex; gap: 0.35rem; align-items: center; }
   .icon-btn {
     background: none;
     border: none;
     color: var(--muted);
     cursor: pointer;
-    padding: 0.25rem;
-    border-radius: 4px;
+    padding: 0.25rem 0.4rem;
+    border-radius: 6px;
+    font: inherit;
     font-size: 0.85rem;
+    transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
   }
-  .icon-btn:hover { color: var(--text); background: #f3f4f6; }
-  .icon-btn.danger:hover { color: var(--danger); }
+  .icon-btn:hover { color: var(--text); background: var(--subtle); }
+  .icon-btn:active { transform: scale(0.94); }
+  .icon-btn.danger:hover { color: var(--danger); background: var(--danger-soft); }
 
   .add-row {
-    display: flex;
-    gap: 0.5rem;
+    display: flex; gap: 0.5rem;
     margin-top: 0.75rem;
     padding-top: 0.75rem;
     border-top: 1px solid var(--border);
   }
-  .add-row input {
-    flex: 1;
+  .add-row input { flex: 1; }
+
+  input[type="text"], input[type="time"], input[type="date"], input[type="number"], textarea, select {
+    font: inherit; color: var(--text); background: #fff;
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 0.45rem 0.65rem; outline: none;
+    transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
   }
-  input[type="text"], input[type="time"], input[type="date"], input[type="number"], select {
-    font: inherit;
-    color: var(--text);
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0.45rem 0.65rem;
-    outline: none;
-    transition: border-color 0.12s;
+  textarea { width: 100%; resize: vertical; min-height: 70px; font-family: inherit; }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   }
-  input:focus, select:focus { border-color: var(--accent); }
 
   button {
-    font: inherit;
-    cursor: pointer;
-    border-radius: 6px;
+    font: inherit; cursor: pointer; border-radius: 6px;
     padding: 0.45rem 0.85rem;
-    border: 1px solid var(--border);
-    background: #fff;
-    color: var(--text);
-    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    border: 1px solid var(--border); background: #fff; color: var(--text);
+    transition: background var(--t-fast) var(--ease),
+                border-color var(--t-fast) var(--ease),
+                color var(--t-fast) var(--ease),
+                transform var(--t-fast) var(--ease);
   }
-  button:hover { background: #f3f4f6; }
+  button:hover { background: var(--subtle); }
+  button:active { transform: scale(0.97); }
   button.primary {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
+    background: var(--accent); color: #fff; border-color: var(--accent);
   }
   button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
   button.stop {
-    background: #fff;
-    color: var(--accent);
-    border-color: var(--accent);
+    background: #fff; color: var(--accent); border-color: var(--accent);
   }
-  button.stop:hover { background: #eff6ff; }
+  button.stop:hover { background: var(--accent-soft); }
   button.subtle {
-    background: none;
-    border: 1px dashed var(--border);
-    color: var(--muted);
-    width: 100%;
-    margin-top: 0.5rem;
+    background: none; border: 1px dashed var(--border);
+    color: var(--muted); width: 100%; margin-top: 0.5rem;
   }
-  button.subtle:hover { color: var(--text); border-color: var(--muted); }
+  button.subtle:hover { color: var(--text); border-color: var(--muted); background: var(--subtle); }
 
   /* entries */
   .entry {
     display: grid;
     grid-template-columns: 12px 1fr auto auto;
-    gap: 0.75rem;
-    align-items: center;
+    gap: 0.75rem; align-items: center;
     padding: 0.55rem 0;
     border-top: 1px solid var(--border);
     font-size: 0.92rem;
+    animation: fadeUp var(--t-base) var(--ease) both;
   }
   .entry:first-child { border-top: none; }
+  .entry.new-row { animation: flashIn 1200ms var(--ease); }
   .entry .meta { color: var(--muted); font-variant-numeric: tabular-nums; }
   .entry .dur { font-variant-numeric: tabular-nums; font-weight: 500; }
   .entry .name { font-weight: 500; }
+  .entry .tags {
+    margin-top: 0.15rem;
+    display: flex; flex-wrap: wrap; gap: 0.3rem;
+  }
+  .tag-chip {
+    font-size: 0.72rem;
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    background: var(--subtle);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
   .entry-edit {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr auto;
-    gap: 0.5rem;
-    align-items: center;
+    gap: 0.5rem; align-items: center;
     padding: 0.55rem 0;
     border-top: 1px solid var(--border);
+    animation: fadeUp var(--t-fast) var(--ease);
   }
   .entry-edit:first-child { border-top: none; }
   .entry-edit .row-actions { display: flex; gap: 0.35rem; }
-
+  .entry-edit .tags-input {
+    grid-column: 1 / -1;
+  }
   .err {
     color: var(--danger);
     font-size: 0.82rem;
     padding: 0.35rem 0 0;
+    animation: fadeUp var(--t-fast) var(--ease);
   }
 
-  /* weekly */
+  /* week chart */
   .week-row {
     display: grid;
     grid-template-columns: 12px 1fr auto;
-    gap: 0.75rem;
-    align-items: center;
+    gap: 0.75rem; align-items: center;
     padding: 0.7rem 0;
     border-top: 1px solid var(--border);
+    animation: fadeUp var(--t-base) var(--ease) both;
   }
   .week-row:first-child { border-top: none; }
   .week-row .name { font-weight: 500; }
   .week-row .bars {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-    align-items: end;
+    gap: 4px; align-items: end;
     height: 44px;
     margin-top: 4px;
   }
   .week-row .bar-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
     height: 100%;
   }
   .week-row .bar {
@@ -222,13 +514,9 @@
     border-radius: 3px 3px 0 0;
     min-height: 0;
     opacity: 0.85;
+    transition: height 600ms var(--ease);
   }
   .week-row .bar.zero { background: var(--border); height: 2px !important; opacity: 1; }
-  .week-row .day-label {
-    font-size: 0.7rem;
-    color: var(--muted);
-    margin-top: 2px;
-  }
   .week-row .total {
     font-variant-numeric: tabular-nums;
     font-weight: 500;
@@ -239,8 +527,7 @@
   .week-grid {
     display: grid;
     grid-template-columns: 12px 1fr auto;
-    gap: 0.75rem;
-    align-items: end;
+    gap: 0.75rem; align-items: end;
     padding: 0.25rem 0 0.5rem;
   }
   .week-grid .axis {
@@ -251,76 +538,149 @@
     color: var(--muted);
     text-align: center;
   }
+  .week-grid .axis .today-cell {
+    color: var(--text); font-weight: 600;
+  }
+  .week-grid .week-label {
+    color: var(--muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
 
-  @media (max-width: 460px) {
+  /* project meta edit form */
+  .meta-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem 0.75rem;
+    margin-top: 0.6rem;
+    animation: fadeUp var(--t-fast) var(--ease);
+  }
+  .meta-form label {
+    display: flex; flex-direction: column; gap: 0.2rem;
+    font-size: 0.78rem; color: var(--muted);
+  }
+  .meta-form .full { grid-column: 1 / -1; }
+  .meta-form .row-actions {
+    grid-column: 1 / -1;
+    display: flex; gap: 0.4rem;
+    margin-top: 0.2rem;
+  }
+
+  /* animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes fadeDown {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 0; transform: translateY(-4px); }
+  }
+  @keyframes pulseRing {
+    0%   { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.45); }
+    70%  { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+  }
+  @keyframes flashIn {
+    0%   { background-color: rgba(37, 99, 235, 0.10); }
+    100% { background-color: transparent; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  @media (max-width: 480px) {
     .wrap { padding: 1.5rem 1rem 3rem; }
     .activity { flex-wrap: wrap; }
     .activity .actions { width: 100%; justify-content: flex-end; }
     .entry { grid-template-columns: 12px 1fr auto; }
     .entry .dur { grid-column: 2 / 3; }
     .entry-edit { grid-template-columns: 1fr 1fr; }
+    .meta-form { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 1.2rem; }
+    .brand-row { flex-direction: column; align-items: flex-start; gap: 0.1rem; }
   }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="app">
-    <h1>Time Tracker</h1>
-    <div class="date" id="todayDate"></div>
-  </header>
-
-  <section id="activitiesSection">
-    <h2>Activities</h2>
-    <div id="activitiesList"></div>
-    <div class="add-row">
-      <input id="newActivityName" type="text" placeholder="New activity name…" maxlength="40" />
-      <button class="primary" id="addActivityBtn">Add</button>
+    <div class="brand-row">
+      <div class="brand">Time Tracker</div>
+      <div class="date" id="todayDate"></div>
     </div>
-  </section>
-
-  <section id="entriesSection">
-    <h2>Today's entries</h2>
-    <div id="entriesList"></div>
-    <button class="subtle" id="addEntryBtn">+ Add manual entry</button>
-  </section>
-
-  <section id="weekSection">
-    <h2>This week</h2>
-    <div id="weekContent"></div>
-  </section>
+    <nav class="crumbs" id="crumbs"></nav>
+    <div id="runningBar"></div>
+  </header>
+  <main id="view"></main>
 </div>
 
 <script>
 (() => {
   "use strict";
 
-  const STORAGE_KEY = "timetrack.v1";
-  const PALETTE = ["#2563eb","#16a34a","#dc2626","#ea580c","#9333ea","#0891b2","#ca8a04","#db2777"];
+  // -------------------------------------------------------------------------
+  // storage & state
+  // -------------------------------------------------------------------------
+  const STORAGE_KEY = "timetrack.v2";
+  const LEGACY_KEYS = ["timetrack.v1"];
+
+  const PORTFOLIO_PALETTE = ["#2563eb","#7c3aed","#0891b2","#16a34a","#ca8a04","#dc2626"];
+  const PROJECT_PALETTE   = ["#2563eb","#16a34a","#dc2626","#ea580c","#9333ea","#0891b2","#ca8a04","#db2777","#0d9488","#65a30d"];
+  const ACTIVITY_PALETTE  = ["#2563eb","#16a34a","#dc2626","#ea580c","#9333ea","#0891b2","#ca8a04","#db2777"];
+
+  const STATUSES = [
+    { value: "planning", label: "Planning", cls: "s-planning" },
+    { value: "active",   label: "Active",   cls: "s-active" },
+    { value: "on-hold",  label: "On hold",  cls: "s-hold" },
+    { value: "done",     label: "Done",     cls: "s-done" },
+  ];
+  const STATUS_BY = Object.fromEntries(STATUSES.map(s => [s.value, s]));
 
   const $ = (id) => document.getElementById(id);
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-  // ----- state -----
-  let state = load();
-
+  function freshState() {
+    return { portfolios: [], projects: [], activities: [], entries: [] };
+  }
   function load() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { activities: [], entries: [] };
+      if (!raw) {
+        // honor "wipe and start fresh": drop any legacy keys
+        for (const k of LEGACY_KEYS) localStorage.removeItem(k);
+        return freshState();
+      }
       const s = JSON.parse(raw);
-      if (!s.activities) s.activities = [];
-      if (!s.entries) s.entries = [];
+      for (const k of ["portfolios", "projects", "activities", "entries"]) {
+        if (!Array.isArray(s[k])) s[k] = [];
+      }
+      // backfill missing tags
+      for (const e of s.entries) if (!Array.isArray(e.tags)) e.tags = [];
       return s;
     } catch {
-      return { activities: [], entries: [] };
+      return freshState();
     }
   }
   function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
 
-  // ----- time helpers -----
-  const MS_HOUR = 3600000, MS_MIN = 60000, MS_SEC = 1000;
+  let state = load();
+  let view = parseHash();
+
+  // newly created ids get a brief flash on next render
+  let highlightIds = new Set();
+  function highlight(id) { highlightIds.add(id); }
+
+  // -------------------------------------------------------------------------
+  // time helpers
+  // -------------------------------------------------------------------------
+  const MS_HOUR = 3600000, MS_MIN = 60000, MS_SEC = 1000, MS_DAY = 86400000;
   const pad = (n) => String(n).padStart(2, "0");
 
   function fmtDuration(ms) {
@@ -332,7 +692,7 @@
   }
   function fmtHours(ms) {
     const h = ms / MS_HOUR;
-    if (h < 0.01) return "0h";
+    if (h < 0.005) return "0h";
     if (h < 1) return `${Math.round(h * 60)}m`;
     return `${h.toFixed(h < 10 ? 1 : 0)}h`;
   }
@@ -341,14 +701,11 @@
     return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
   function startOfDay(d) {
-    const x = new Date(d);
-    x.setHours(0, 0, 0, 0);
-    return x;
+    const x = new Date(d); x.setHours(0, 0, 0, 0); return x;
   }
   function startOfWeek(d) {
-    // Monday as week start
     const x = startOfDay(d);
-    const day = (x.getDay() + 6) % 7; // 0 = Mon
+    const day = (x.getDay() + 6) % 7; // Mon = 0
     x.setDate(x.getDate() - day);
     return x;
   }
@@ -356,8 +713,11 @@
     const d = new Date(iso);
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
   }
+  function dateInputToIso(dateStr) {
+    const [y, mo, d] = dateStr.split("-").map(Number);
+    return new Date(y, mo - 1, d, 0, 0, 0, 0).toISOString();
+  }
   function combineDateTime(dateStr, timeStr) {
-    // returns ISO; treats inputs as local
     const [y, mo, d] = dateStr.split("-").map(Number);
     const [h, mi] = timeStr.split(":").map(Number);
     return new Date(y, mo - 1, d, h, mi, 0, 0).toISOString();
@@ -365,95 +725,225 @@
   function fmtDateLong(d) {
     return d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
   }
+  function fmtDateShort(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+  function daysUntil(iso) {
+    const target = startOfDay(new Date(iso)).getTime();
+    const today = startOfDay(new Date()).getTime();
+    return Math.round((target - today) / MS_DAY);
+  }
 
-  // ----- domain helpers -----
-  function getRunning() {
-    return state.entries.find(e => e.end === null) || null;
+  // -------------------------------------------------------------------------
+  // domain queries
+  // -------------------------------------------------------------------------
+  function getRunning() { return state.entries.find(e => e.end === null) || null; }
+  function activityById(id) { return state.activities.find(a => a.id === id); }
+  function projectById(id)  { return state.projects.find(p => p.id === id); }
+  function portfolioById(id){ return state.portfolios.find(p => p.id === id); }
+  function projectsOfPortfolio(pid) { return state.projects.filter(p => p.portfolioId === pid); }
+  function activitiesOfProject(pid) { return state.activities.filter(a => a.projectId === pid); }
+  function projectOfActivity(aid) {
+    const a = activityById(aid); return a ? projectById(a.projectId) : null;
   }
-  function durationOf(e, nowMs = Date.now()) {
-    const startMs = new Date(e.start).getTime();
-    const endMs = e.end ? new Date(e.end).getTime() : nowMs;
-    return Math.max(0, endMs - startMs);
-  }
-  function overlapsWithRunning(entry, runningId) {
-    // For a new/edited closed entry, ensure it doesn't conflict with the running one.
-    const running = getRunning();
-    if (!running || running.id === runningId) return false;
-    const aS = new Date(entry.start).getTime();
-    const aE = new Date(entry.end).getTime();
-    const bS = new Date(running.start).getTime();
-    return aE > bS && aS < Date.now(); // closed entry ending after running started is the main concern
-  }
-  function entriesOnDay(date) {
-    const dayStart = startOfDay(date).getTime();
-    const dayEnd = dayStart + 24 * MS_HOUR;
+
+  function entriesInRange(filterFn, fromMs, toMs) {
     return state.entries.filter(e => {
+      if (filterFn && !filterFn(e)) return false;
       const s = new Date(e.start).getTime();
-      return s >= dayStart && s < dayEnd;
+      return s >= fromMs && s < toMs;
     }).sort((a, b) => new Date(a.start) - new Date(b.start));
   }
-  function totalForActivityOnDay(activityId, date) {
+  function entriesOnDay(date, filterFn) {
     const dayStart = startOfDay(date).getTime();
-    const dayEnd = dayStart + 24 * MS_HOUR;
+    return entriesInRange(filterFn, dayStart, dayStart + MS_DAY);
+  }
+  function totalForFilterOnDay(filterFn, date) {
+    const dayStart = startOfDay(date).getTime();
+    const dayEnd = dayStart + MS_DAY;
     const now = Date.now();
     let total = 0;
     for (const e of state.entries) {
-      if (e.activityId !== activityId) continue;
+      if (filterFn && !filterFn(e)) continue;
       const s = new Date(e.start).getTime();
       const en = e.end ? new Date(e.end).getTime() : now;
-      const clipS = Math.max(s, dayStart);
-      const clipE = Math.min(en, dayEnd);
-      if (clipE > clipS) total += clipE - clipS;
+      const cS = Math.max(s, dayStart);
+      const cE = Math.min(en, dayEnd);
+      if (cE > cS) total += cE - cS;
     }
     return total;
   }
+  function totalForFilterInRange(filterFn, fromMs, toMs) {
+    const now = Date.now();
+    let total = 0;
+    for (const e of state.entries) {
+      if (filterFn && !filterFn(e)) continue;
+      const s = new Date(e.start).getTime();
+      const en = e.end ? new Date(e.end).getTime() : now;
+      const cS = Math.max(s, fromMs);
+      const cE = Math.min(en, toMs);
+      if (cE > cS) total += cE - cS;
+    }
+    return total;
+  }
+  function isActivityInProject(activityId, projectId) {
+    const a = activityById(activityId);
+    return a && a.projectId === projectId;
+  }
+  function isActivityInPortfolio(activityId, portfolioId) {
+    const a = activityById(activityId);
+    if (!a) return false;
+    const p = projectById(a.projectId);
+    return p && p.portfolioId === portfolioId;
+  }
+  function overlapsWithRunning(entry, ignoreId) {
+    const r = getRunning();
+    if (!r || r.id === ignoreId) return false;
+    const aS = new Date(entry.start).getTime();
+    const aE = new Date(entry.end).getTime();
+    const rS = new Date(r.start).getTime();
+    return aE > rS && aS < Date.now();
+  }
 
-  // ----- actions -----
-  function addActivity(name) {
+  // -------------------------------------------------------------------------
+  // actions (CRUD)
+  // -------------------------------------------------------------------------
+  function pickColor(palette, used) {
+    const u = new Set(used);
+    return palette.find(c => !u.has(c)) || palette[used.length % palette.length];
+  }
+  function addPortfolio(name) {
     name = (name || "").trim();
-    if (!name) return;
-    const used = new Set(state.activities.map(a => a.color));
-    const color = PALETTE.find(c => !used.has(c)) || PALETTE[state.activities.length % PALETTE.length];
-    state.activities.push({ id: uid(), name, color });
-    save(); render();
+    if (!name) return null;
+    const color = pickColor(PORTFOLIO_PALETTE, state.portfolios.map(p => p.color));
+    const id = uid();
+    state.portfolios.push({ id, name, color });
+    highlight(id);
+    save();
+    return id;
+  }
+  function renamePortfolio(id, name) {
+    const p = portfolioById(id);
+    if (!p) return;
+    p.name = (name || "").trim() || p.name;
+    save();
+  }
+  function deletePortfolio(id) {
+    const p = portfolioById(id);
+    if (!p) return;
+    const ps = projectsOfPortfolio(id);
+    const msg = ps.length
+      ? `Delete portfolio "${p.name}" and its ${ps.length} project(s) and all their time? This can't be undone.`
+      : `Delete portfolio "${p.name}"?`;
+    if (!confirm(msg)) return;
+    const projIds = new Set(ps.map(p => p.id));
+    const actIds = new Set(state.activities.filter(a => projIds.has(a.projectId)).map(a => a.id));
+    state.entries = state.entries.filter(e => !actIds.has(e.activityId));
+    state.activities = state.activities.filter(a => !projIds.has(a.projectId));
+    state.projects = state.projects.filter(p => p.portfolioId !== id);
+    state.portfolios = state.portfolios.filter(p => p.id !== id);
+    save();
+    if (view.name !== "home") navigate({ name: "home" });
+    else render();
+  }
+  function addProject(portfolioId, fields) {
+    if (!portfolioById(portfolioId)) return null;
+    const color = pickColor(PROJECT_PALETTE, state.projects.map(p => p.color));
+    const id = uid();
+    state.projects.push({
+      id, portfolioId,
+      name: (fields.name || "Untitled project").trim(),
+      description: fields.description || "",
+      status: fields.status || "active",
+      deadline: fields.deadline || null,
+      estimatedHours: fields.estimatedHours == null ? null : Number(fields.estimatedHours),
+      color,
+    });
+    highlight(id);
+    save();
+    return id;
+  }
+  function updateProject(id, patch) {
+    const p = projectById(id);
+    if (!p) return;
+    Object.assign(p, patch);
+    if (patch.estimatedHours === "" || patch.estimatedHours == null) p.estimatedHours = null;
+    save();
+  }
+  function deleteProject(id) {
+    const p = projectById(id);
+    if (!p) return;
+    const acts = activitiesOfProject(id);
+    const hasEntries = state.entries.some(e => acts.some(a => a.id === e.activityId));
+    const msg = hasEntries
+      ? `Delete project "${p.name}" and all its time entries?`
+      : `Delete project "${p.name}"?`;
+    if (!confirm(msg)) return;
+    const actIds = new Set(acts.map(a => a.id));
+    state.entries = state.entries.filter(e => !actIds.has(e.activityId));
+    state.activities = state.activities.filter(a => a.projectId !== id);
+    state.projects = state.projects.filter(p => p.id !== id);
+    save();
+    if (view.name === "project" && view.id === id) navigate({ name: "portfolio", id: p.portfolioId });
+    else render();
+  }
+  function addActivity(projectId, name) {
+    name = (name || "").trim();
+    if (!name) return null;
+    if (!projectById(projectId)) return null;
+    const used = activitiesOfProject(projectId).map(a => a.color);
+    const color = pickColor(ACTIVITY_PALETTE, used);
+    const id = uid();
+    state.activities.push({ id, projectId, name, color });
+    highlight(id);
+    save();
+    return id;
   }
   function renameActivity(id, name) {
-    const a = state.activities.find(x => x.id === id);
+    const a = activityById(id);
     if (!a) return;
-    a.name = name.trim() || a.name;
-    save(); render();
+    a.name = (name || "").trim() || a.name;
+    save();
   }
   function deleteActivity(id) {
-    const a = state.activities.find(x => x.id === id);
+    const a = activityById(id);
     if (!a) return;
-    const hasEntries = state.entries.some(e => e.activityId === id);
-    const msg = hasEntries
-      ? `Delete "${a.name}" and all its time entries? This can't be undone.`
+    const has = state.entries.some(e => e.activityId === id);
+    const msg = has
+      ? `Delete "${a.name}" and its time entries?`
       : `Delete "${a.name}"?`;
     if (!confirm(msg)) return;
     state.entries = state.entries.filter(e => e.activityId !== id);
-    state.activities = state.activities.filter(x => x.id !== id);
-    save(); render();
+    state.activities = state.activities.filter(a => a.id !== id);
+    save();
+    render();
   }
   function startActivity(id) {
+    if (!activityById(id)) return;
     const now = new Date().toISOString();
-    const running = getRunning();
-    if (running) {
-      if (running.activityId === id) return; // already running this one
-      running.end = now;
+    const r = getRunning();
+    if (r) {
+      if (r.activityId === id) return;
+      r.end = now;
     }
-    state.entries.push({ id: uid(), activityId: id, start: now, end: null });
-    save(); render();
+    const eid = uid();
+    state.entries.push({ id: eid, activityId: id, start: now, end: null, tags: [] });
+    highlight(eid);
+    save();
+    render();
   }
   function stopRunning() {
     const r = getRunning();
     if (!r) return;
     r.end = new Date().toISOString();
-    save(); render();
+    save();
+    render();
   }
   function deleteEntry(id) {
     state.entries = state.entries.filter(e => e.id !== id);
-    save(); render();
+    save();
+    render();
   }
   function updateEntry(id, patch) {
     const e = state.entries.find(x => x.id === id);
@@ -466,158 +956,669 @@
       if (overlapsWithRunning(next, id)) return { ok: false, err: "Conflicts with the running timer." };
     }
     Object.assign(e, patch);
-    save(); render();
+    save();
+    render();
     return { ok: true };
   }
-  function addManualEntry({ activityId, dateStr, startTime, endTime }) {
-    if (!activityId) return { ok: false, err: "Pick an activity." };
+  function addManualEntry({ activityId, dateStr, startTime, endTime, tags }) {
+    if (!activityById(activityId)) return { ok: false, err: "Pick an activity." };
     if (!dateStr || !startTime || !endTime) return { ok: false, err: "All fields required." };
     const start = combineDateTime(dateStr, startTime);
     const end = combineDateTime(dateStr, endTime);
     if (new Date(end).getTime() < new Date(start).getTime())
       return { ok: false, err: "End must be at or after start." };
-    const entry = { id: uid(), activityId, start, end };
+    const entry = {
+      id: uid(),
+      activityId,
+      start, end,
+      tags: parseTags(tags),
+    };
     if (overlapsWithRunning(entry)) return { ok: false, err: "Conflicts with the running timer." };
     state.entries.push(entry);
-    save(); render();
+    highlight(entry.id);
+    save();
+    render();
     return { ok: true };
   }
+  function parseTags(s) {
+    if (!s) return [];
+    return s.split(",").map(t => t.trim()).filter(Boolean).slice(0, 8);
+  }
 
-  // ----- rendering -----
+  // -------------------------------------------------------------------------
+  // routing (hash-based)
+  // -------------------------------------------------------------------------
+  function parseHash() {
+    const h = location.hash.replace(/^#\/?/, "");
+    if (!h) return { name: "home" };
+    const parts = h.split("/");
+    if (parts[0] === "p" && parts[1]) {
+      if (parts[2] === "proj" && parts[3]) return { name: "project", id: parts[3], portfolioId: parts[1] };
+      return { name: "portfolio", id: parts[1] };
+    }
+    return { name: "home" };
+  }
+  function viewHref(v) {
+    if (v.name === "home") return "#/";
+    if (v.name === "portfolio") return `#/p/${v.id}`;
+    if (v.name === "project") {
+      const p = projectById(v.id);
+      const pf = p ? p.portfolioId : "_";
+      return `#/p/${pf}/proj/${v.id}`;
+    }
+    return "#/";
+  }
+  function navigate(v) {
+    location.hash = viewHref(v);
+  }
+  window.addEventListener("hashchange", () => {
+    view = parseHash();
+    render();
+  });
+
+  // -------------------------------------------------------------------------
+  // rendering
+  // -------------------------------------------------------------------------
   function render() {
-    renderHeader();
-    renderActivities();
-    renderEntries();
-    renderWeek();
-  }
-
-  function renderHeader() {
+    // header bits
     $("todayDate").textContent = fmtDateLong(new Date());
+    renderCrumbs();
+    renderRunningBar();
+
+    // resolve view, falling back to home if id missing
+    if (view.name === "portfolio" && !portfolioById(view.id)) view = { name: "home" };
+    if (view.name === "project") {
+      const p = projectById(view.id);
+      if (!p) view = { name: "home" };
+      else view.portfolioId = p.portfolioId;
+    }
+
+    const root = $("view");
+    const next = document.createElement("div");
+    next.className = "view";
+    if (view.name === "home") renderHome(next);
+    else if (view.name === "portfolio") renderPortfolioView(next, view.id);
+    else if (view.name === "project") renderProjectView(next, view.id);
+    swap(root, next);
+
+    // clear highlight set after this paint
+    requestAnimationFrame(() => highlightIds.clear());
   }
 
-  function renderActivities() {
-    const list = $("activitiesList");
-    list.innerHTML = "";
-    if (state.activities.length === 0) {
+  function swap(root, next) {
+    const old = root.firstElementChild;
+    if (!old) { root.appendChild(next); return; }
+    old.classList.add("leaving");
+    let replaced = false;
+    const finalize = () => {
+      if (replaced) return;
+      replaced = true;
+      old.removeEventListener("animationend", finalize);
+      root.replaceChildren(next);
+    };
+    old.addEventListener("animationend", finalize);
+    setTimeout(finalize, 200);
+  }
+
+  function renderCrumbs() {
+    const el = $("crumbs");
+    el.innerHTML = "";
+    const parts = [];
+    if (view.name === "home") {
+      parts.push({ label: "Home", current: true });
+    } else if (view.name === "portfolio") {
+      parts.push({ label: "Home", href: "#/" });
+      const pf = portfolioById(view.id);
+      parts.push({ label: pf ? pf.name : "?", current: true });
+    } else if (view.name === "project") {
+      const proj = projectById(view.id);
+      const pf = proj ? portfolioById(proj.portfolioId) : null;
+      parts.push({ label: "Home", href: "#/" });
+      if (pf) parts.push({ label: pf.name, href: `#/p/${pf.id}` });
+      parts.push({ label: proj ? proj.name : "?", current: true });
+    }
+    parts.forEach((p, i) => {
+      if (i > 0) {
+        const sep = document.createElement("span");
+        sep.className = "sep";
+        sep.textContent = "›";
+        el.appendChild(sep);
+      }
+      if (p.href) {
+        const a = document.createElement("a");
+        a.href = p.href; a.textContent = p.label;
+        el.appendChild(a);
+      } else {
+        const s = document.createElement("span");
+        s.className = "current";
+        s.textContent = p.label;
+        el.appendChild(s);
+      }
+    });
+  }
+
+  function renderRunningBar() {
+    const el = $("runningBar");
+    el.innerHTML = "";
+    const r = getRunning();
+    if (!r) return;
+    const a = activityById(r.activityId);
+    const proj = a ? projectById(a.projectId) : null;
+    const pf = proj ? portfolioById(proj.portfolioId) : null;
+
+    const bar = document.createElement("div");
+    bar.className = "running-bar";
+
+    const dot = document.createElement("span");
+    dot.className = "pulse-dot";
+    if (a) dot.style.background = a.color;
+
+    const label = document.createElement("div");
+    label.className = "label";
+    if (a && proj) {
+      label.innerHTML = `<span>${escapeHtml(a.name)}</span> <span class="sub">· ${escapeHtml(proj.name)}${pf ? " · " + escapeHtml(pf.name) : ""}</span>`;
+      label.style.cursor = "pointer";
+      label.addEventListener("click", () => navigate({ name: "project", id: proj.id }));
+    } else {
+      label.textContent = "Running…";
+    }
+
+    const live = document.createElement("span");
+    live.className = "live";
+    live.dataset.live = "1";
+    live.dataset.entryId = r.id;
+    live.textContent = fmtDuration(Date.now() - new Date(r.start).getTime());
+
+    const stop = document.createElement("button");
+    stop.className = "stop-btn";
+    stop.textContent = "Stop";
+    stop.addEventListener("click", stopRunning);
+
+    bar.append(dot, label, live, stop);
+    el.appendChild(bar);
+  }
+
+  // -------- Home view (portfolios)
+  function renderHome(root) {
+    const sec = document.createElement("section");
+    const head = document.createElement("div");
+    head.className = "section-head";
+    head.innerHTML = `<h2>Portfolios</h2><span class="head-meta">${state.portfolios.length} total</span>`;
+    sec.appendChild(head);
+
+    const list = document.createElement("div");
+    list.className = "card-list";
+
+    if (state.portfolios.length === 0) {
       const empty = document.createElement("div");
       empty.className = "empty";
-      empty.textContent = "No activities yet — add one below to start tracking.";
-      list.appendChild(empty);
-      return;
-    }
-    const running = getRunning();
-    const today = new Date();
-    for (const a of state.activities) {
-      const row = document.createElement("div");
-      row.className = "activity" + (running && running.activityId === a.id ? " running" : "");
-      const isRunning = running && running.activityId === a.id;
-      const todayMs = totalForActivityOnDay(a.id, today);
-
-      const dot = document.createElement("span");
-      dot.className = "dot";
-      dot.style.background = a.color;
-
-      const name = document.createElement("div");
-      name.className = "name";
-      name.textContent = a.name;
-      name.title = "Click to rename";
-      name.style.cursor = "pointer";
-      name.addEventListener("click", () => {
-        const next = prompt("Rename activity:", a.name);
-        if (next !== null) renameActivity(a.id, next);
+      empty.textContent = "No portfolios yet. Create one to group your projects.";
+      sec.appendChild(empty);
+    } else {
+      const weekStart = startOfWeek(new Date()).getTime();
+      const weekEnd = weekStart + 7 * MS_DAY;
+      state.portfolios.forEach((p, i) => {
+        const projs = projectsOfPortfolio(p.id);
+        const weekMs = totalForFilterInRange(e => isActivityInPortfolio(e.activityId, p.id), weekStart, weekEnd);
+        const card = makeCard({
+          color: p.color,
+          title: p.name,
+          right: fmtHours(weekMs) + " this week",
+          subText: `${projs.length} project${projs.length === 1 ? "" : "s"}`,
+          highlightId: p.id,
+          delay: i,
+          onClick: () => navigate({ name: "portfolio", id: p.id }),
+        });
+        list.appendChild(card);
       });
+      sec.appendChild(list);
+    }
 
-      const today_ = document.createElement("div");
-      today_.className = "today";
-      today_.dataset.activityId = a.id;
-      today_.textContent = fmtDuration(todayMs);
+    const adder = inlineNameAdder("New portfolio name…", "Add portfolio", (name) => {
+      const id = addPortfolio(name);
+      if (id) render();
+    });
+    sec.appendChild(adder);
+    root.appendChild(sec);
 
-      const actions = document.createElement("div");
-      actions.className = "actions";
-
-      const toggle = document.createElement("button");
-      if (isRunning) {
-        toggle.className = "stop";
-        toggle.textContent = "Stop";
-        toggle.addEventListener("click", stopRunning);
-      } else {
-        toggle.className = "primary";
-        toggle.textContent = "Start";
-        toggle.addEventListener("click", () => startActivity(a.id));
-      }
-
-      const del = document.createElement("button");
-      del.className = "icon-btn danger";
-      del.title = "Delete activity";
-      del.innerHTML = "&times;";
-      del.style.fontSize = "1.1rem";
-      del.addEventListener("click", () => deleteActivity(a.id));
-
-      actions.append(toggle, del);
-      row.append(dot, name, today_, actions);
-      list.appendChild(row);
+    // Cross-portfolio week chart, if there's anything to show
+    if (state.portfolios.length > 0 && state.activities.length > 0) {
+      const chartSec = document.createElement("section");
+      const h = document.createElement("h2");
+      h.textContent = "This week, by portfolio";
+      chartSec.appendChild(h);
+      renderWeekChartByPortfolio(chartSec);
+      root.appendChild(chartSec);
     }
   }
 
-  function renderEntries() {
-    const list = $("entriesList");
-    list.innerHTML = "";
-    const today = new Date();
-    const todayEntries = entriesOnDay(today);
+  // -------- Portfolio view
+  function renderPortfolioView(root, portfolioId) {
+    const pf = portfolioById(portfolioId);
+    if (!pf) return;
 
-    if (todayEntries.length === 0) {
+    const projs = projectsOfPortfolio(portfolioId);
+    const weekStart = startOfWeek(new Date()).getTime();
+    const weekEnd = weekStart + 7 * MS_DAY;
+    const weekMs = totalForFilterInRange(e => isActivityInPortfolio(e.activityId, pf.id), weekStart, weekEnd);
+
+    // hero
+    const hero = document.createElement("div");
+    hero.className = "hero";
+    const top = document.createElement("div");
+    top.className = "hero-top";
+    const dot = document.createElement("span");
+    dot.className = "dot-lg";
+    dot.style.background = pf.color;
+    const title = document.createElement("h1");
+    title.textContent = pf.name;
+    title.title = "Click to rename";
+    title.addEventListener("click", () => {
+      const next = prompt("Rename portfolio:", pf.name);
+      if (next !== null) { renamePortfolio(pf.id, next); render(); }
+    });
+    const actions = document.createElement("div");
+    actions.className = "hero-actions";
+    const del = document.createElement("button");
+    del.className = "icon-btn danger";
+    del.title = "Delete portfolio";
+    del.innerHTML = "&times;";
+    del.style.fontSize = "1.1rem";
+    del.addEventListener("click", () => deletePortfolio(pf.id));
+    actions.appendChild(del);
+    top.append(dot, title, actions);
+    hero.appendChild(top);
+
+    const meta = document.createElement("div");
+    meta.className = "meta-row";
+    meta.innerHTML = `<span>${projs.length} project${projs.length === 1 ? "" : "s"}</span><span>${fmtHours(weekMs)} this week</span>`;
+    hero.appendChild(meta);
+    root.appendChild(hero);
+
+    // projects
+    const sec = document.createElement("section");
+    const head = document.createElement("div");
+    head.className = "section-head";
+    head.innerHTML = `<h2>Projects</h2>`;
+    sec.appendChild(head);
+
+    if (projs.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "No projects in this portfolio yet.";
+      sec.appendChild(empty);
+    } else {
+      const list = document.createElement("div");
+      list.className = "card-list";
+      projs.forEach((proj, i) => list.appendChild(buildProjectCard(proj, i)));
+      sec.appendChild(list);
+    }
+
+    const adder = inlineProjectAdder(portfolioId, () => render());
+    sec.appendChild(adder);
+    root.appendChild(sec);
+
+    // weekly chart for this portfolio
+    if (projs.length > 0) {
+      const chartSec = document.createElement("section");
+      const h = document.createElement("h2");
+      h.textContent = "This week, by project";
+      chartSec.appendChild(h);
+      renderWeekChartByProject(chartSec, projs);
+      root.appendChild(chartSec);
+    }
+  }
+
+  function buildProjectCard(proj, idx) {
+    const acts = activitiesOfProject(proj.id);
+    const actIds = new Set(acts.map(a => a.id));
+    const weekStart = startOfWeek(new Date()).getTime();
+    const weekEnd = weekStart + 7 * MS_DAY;
+    const todayMs = totalForFilterOnDay(e => actIds.has(e.activityId), new Date());
+    const weekMs = totalForFilterInRange(e => actIds.has(e.activityId), weekStart, weekEnd);
+    const totalMs = totalForFilterInRange(e => actIds.has(e.activityId), 0, Date.now() + MS_DAY);
+
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "card";
+    if (highlightIds.has(proj.id)) card.classList.add("new-row");
+    card.style.animationDelay = (idx * 30) + "ms";
+    card.addEventListener("click", () => navigate({ name: "project", id: proj.id }));
+
+    const top = document.createElement("div");
+    top.className = "card-top";
+    const dot = document.createElement("span");
+    dot.className = "dot"; dot.style.background = proj.color;
+    const title = document.createElement("span");
+    title.className = "title";
+    title.textContent = proj.name;
+    const right = document.createElement("span");
+    right.className = "right";
+    right.textContent = fmtHours(weekMs) + " / wk";
+    top.append(dot, title, right);
+    card.appendChild(top);
+
+    const sub = document.createElement("div");
+    sub.className = "sub";
+    const st = STATUS_BY[proj.status] || STATUS_BY.active;
+    const badge = document.createElement("span");
+    badge.className = "badge " + st.cls;
+    badge.innerHTML = `<span class="badge-dot"></span>${st.label}`;
+    sub.appendChild(badge);
+
+    if (proj.deadline) {
+      const d = daysUntil(proj.deadline);
+      const dEl = document.createElement("span");
+      if (d < 0) dEl.className = "due-overdue";
+      else if (d <= 3) dEl.className = "due-soon";
+      dEl.textContent = d < 0
+        ? `${Math.abs(d)}d overdue`
+        : d === 0 ? "due today" : d === 1 ? "due tomorrow" : `due in ${d}d`;
+      sub.appendChild(dEl);
+    }
+    if (proj.estimatedHours != null) {
+      const t = document.createElement("span");
+      t.textContent = `${fmtHours(totalMs)} / ${proj.estimatedHours}h`;
+      sub.appendChild(t);
+    }
+    if (todayMs > 0) {
+      const t = document.createElement("span");
+      t.textContent = `${fmtHours(todayMs)} today`;
+      sub.appendChild(t);
+    }
+    card.appendChild(sub);
+
+    if (proj.estimatedHours != null && proj.estimatedHours > 0) {
+      const totalH = totalMs / MS_HOUR;
+      const pct = Math.min(100, Math.round((totalH / proj.estimatedHours) * 100));
+      const mp = document.createElement("div");
+      mp.className = "mini-progress";
+      const inner = document.createElement("div");
+      inner.style.width = pct + "%";
+      if (totalH > proj.estimatedHours) inner.style.background = "var(--warn)";
+      mp.appendChild(inner);
+      card.appendChild(mp);
+    }
+    return card;
+  }
+
+  // -------- Project view
+  function renderProjectView(root, projectId) {
+    const proj = projectById(projectId);
+    if (!proj) return;
+    const pf = portfolioById(proj.portfolioId);
+    const acts = activitiesOfProject(projectId);
+    const actIds = new Set(acts.map(a => a.id));
+    const weekStart = startOfWeek(new Date()).getTime();
+    const weekEnd = weekStart + 7 * MS_DAY;
+    const totalMs = totalForFilterInRange(e => actIds.has(e.activityId), 0, Date.now() + MS_DAY);
+
+    // hero
+    const hero = document.createElement("div");
+    hero.className = "hero";
+    const top = document.createElement("div");
+    top.className = "hero-top";
+    const dot = document.createElement("span");
+    dot.className = "dot-lg"; dot.style.background = proj.color;
+    const title = document.createElement("h1");
+    title.textContent = proj.name;
+    title.title = "Click to rename";
+    title.addEventListener("click", () => {
+      const next = prompt("Rename project:", proj.name);
+      if (next !== null) { updateProject(proj.id, { name: (next || "").trim() || proj.name }); render(); }
+    });
+    const actions = document.createElement("div");
+    actions.className = "hero-actions";
+
+    const editBtn = document.createElement("button");
+    editBtn.className = "icon-btn";
+    editBtn.textContent = "Edit";
+    editBtn.addEventListener("click", () => openProjectMetaEditor(proj.id, hero));
+
+    const del = document.createElement("button");
+    del.className = "icon-btn danger";
+    del.title = "Delete project";
+    del.innerHTML = "&times;";
+    del.style.fontSize = "1.1rem";
+    del.addEventListener("click", () => deleteProject(proj.id));
+
+    actions.append(editBtn, del);
+    top.append(dot, title, actions);
+    hero.appendChild(top);
+
+    const meta = document.createElement("div");
+    meta.className = "meta-row";
+    const st = STATUS_BY[proj.status] || STATUS_BY.active;
+    const badge = document.createElement("span");
+    badge.className = "badge " + st.cls;
+    badge.innerHTML = `<span class="badge-dot"></span>${st.label}`;
+    meta.appendChild(badge);
+    if (proj.deadline) {
+      const d = daysUntil(proj.deadline);
+      const dEl = document.createElement("span");
+      if (d < 0) dEl.className = "due-overdue";
+      else if (d <= 3) dEl.className = "due-soon";
+      dEl.textContent = `Due ${fmtDateShort(proj.deadline)}` +
+        (d < 0 ? ` · ${Math.abs(d)}d overdue` : d === 0 ? " · today" : ` · in ${d}d`);
+      meta.appendChild(dEl);
+    }
+    const t = document.createElement("span");
+    t.textContent = proj.estimatedHours != null
+      ? `${fmtHours(totalMs)} of ${proj.estimatedHours}h`
+      : `${fmtHours(totalMs)} total`;
+    meta.appendChild(t);
+    hero.appendChild(meta);
+
+    if (proj.description) {
+      const d = document.createElement("div");
+      d.className = "desc";
+      d.textContent = proj.description;
+      hero.appendChild(d);
+    } else {
+      const d = document.createElement("div");
+      d.className = "desc empty-desc";
+      d.textContent = "Add a description…";
+      d.addEventListener("click", () => openProjectMetaEditor(proj.id, hero));
+      hero.appendChild(d);
+    }
+
+    if (proj.estimatedHours != null && proj.estimatedHours > 0) {
+      const totalH = totalMs / MS_HOUR;
+      const pct = Math.min(100, Math.round((totalH / proj.estimatedHours) * 100));
+      const wrap = document.createElement("div");
+      wrap.className = "progress-wrap";
+      wrap.innerHTML = `
+        <div class="progress-meta">
+          <span>${fmtHours(totalMs)} of ${proj.estimatedHours}h</span>
+          <span>${pct}%</span>
+        </div>`;
+      const bar = document.createElement("div");
+      bar.className = "progress" + (totalH > proj.estimatedHours ? " over" : "");
+      const inner = document.createElement("div");
+      requestAnimationFrame(() => { inner.style.width = pct + "%"; });
+      bar.appendChild(inner);
+      wrap.appendChild(bar);
+      hero.appendChild(wrap);
+    }
+    root.appendChild(hero);
+
+    // Activities
+    const actSec = document.createElement("section");
+    const actHead = document.createElement("div");
+    actHead.className = "section-head";
+    actHead.innerHTML = `<h2>Activities</h2>`;
+    actSec.appendChild(actHead);
+
+    const actList = document.createElement("div");
+    if (acts.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "No activities yet — add one to start tracking time on this project.";
+      actSec.appendChild(empty);
+    } else {
+      const running = getRunning();
+      acts.forEach((a, i) => actList.appendChild(buildActivityRow(a, running, i)));
+      actSec.appendChild(actList);
+    }
+    const actAdder = inlineNameAdder("New activity name…", "Add", (name) => {
+      const id = addActivity(proj.id, name);
+      if (id) render();
+    });
+    actSec.appendChild(actAdder);
+    root.appendChild(actSec);
+
+    // Today's entries (this project)
+    const entSec = document.createElement("section");
+    const entHead = document.createElement("div");
+    entHead.className = "section-head";
+    entHead.innerHTML = `<h2>Today's entries</h2>`;
+    entSec.appendChild(entHead);
+
+    const entList = document.createElement("div");
+    const todays = entriesOnDay(new Date(), e => actIds.has(e.activityId));
+    if (todays.length === 0) {
       const empty = document.createElement("div");
       empty.className = "empty";
       empty.textContent = "No entries today yet.";
-      list.appendChild(empty);
+      entSec.appendChild(empty);
     } else {
-      for (const e of todayEntries) {
-        list.appendChild(renderEntryRow(e));
-      }
+      todays.forEach((e, i) => entList.appendChild(buildEntryRow(e, i)));
+      entSec.appendChild(entList);
+    }
+    const addBtn = document.createElement("button");
+    addBtn.className = "subtle";
+    addBtn.textContent = "+ Add manual entry";
+    addBtn.addEventListener("click", () => {
+      if (acts.length === 0) { alert("Add an activity first."); return; }
+      const editor = buildEntryEditor({
+        activities: acts,
+        activityId: acts[0].id,
+        dateStr: isoToDateInput(new Date().toISOString()),
+        startTime: "09:00",
+        endTime: "10:00",
+        tags: "",
+        onCancel: () => render(),
+        onSave: (vals) => addManualEntry(vals),
+      });
+      addBtn.replaceWith(editor);
+    });
+    entSec.appendChild(addBtn);
+    root.appendChild(entSec);
+
+    // Weekly chart by activity (within project)
+    if (acts.length > 0) {
+      const chartSec = document.createElement("section");
+      const h = document.createElement("h2");
+      h.textContent = "This week, by activity";
+      chartSec.appendChild(h);
+      renderWeekChartByActivity(chartSec, acts);
+      root.appendChild(chartSec);
     }
   }
 
-  function renderEntryRow(e) {
-    const a = state.activities.find(x => x.id === e.activityId);
-    if (!a) {
-      const row = document.createElement("div");
-      row.className = "entry";
-      row.innerHTML = `<span class="dot" style="background:#ccc"></span><span class="name">(deleted activity)</span><span></span><span></span>`;
-      return row;
+  function buildActivityRow(a, running, idx) {
+    const row = document.createElement("div");
+    row.className = "activity";
+    if (highlightIds.has(a.id)) row.classList.add("new-row");
+    row.style.animationDelay = (idx * 30) + "ms";
+
+    const isRunning = running && running.activityId === a.id;
+    if (isRunning) row.classList.add("running");
+
+    const dot = document.createElement("span");
+    dot.className = "dot"; dot.style.background = a.color;
+
+    const name = document.createElement("div");
+    name.className = "name";
+    name.textContent = a.name;
+    name.title = "Click to rename";
+    name.addEventListener("click", () => {
+      const next = prompt("Rename activity:", a.name);
+      if (next !== null) { renameActivity(a.id, next); render(); }
+    });
+
+    const today = document.createElement("div");
+    today.className = "today";
+    today.dataset.activityId = a.id;
+    today.textContent = fmtDuration(totalForFilterOnDay(e => e.activityId === a.id, new Date()));
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const toggle = document.createElement("button");
+    if (isRunning) {
+      toggle.className = "stop";
+      toggle.textContent = "Stop";
+      toggle.addEventListener("click", stopRunning);
+    } else {
+      toggle.className = "primary";
+      toggle.textContent = "Start";
+      toggle.addEventListener("click", () => startActivity(a.id));
     }
+
+    const del = document.createElement("button");
+    del.className = "icon-btn danger";
+    del.title = "Delete activity";
+    del.innerHTML = "&times;";
+    del.style.fontSize = "1.1rem";
+    del.addEventListener("click", () => deleteActivity(a.id));
+
+    actions.append(toggle, del);
+    row.append(dot, name, today, actions);
+    return row;
+  }
+
+  function buildEntryRow(e, idx) {
+    const a = activityById(e.activityId);
+    const proj = a ? projectById(a.projectId) : null;
+
     const row = document.createElement("div");
     row.className = "entry";
     row.dataset.entryId = e.id;
+    if (highlightIds.has(e.id)) row.classList.add("new-row");
+    row.style.animationDelay = (idx * 25) + "ms";
 
     const dot = document.createElement("span");
     dot.className = "dot";
-    dot.style.background = a.color;
+    dot.style.background = a ? a.color : "#ccc";
 
     const center = document.createElement("div");
     const name = document.createElement("div");
     name.className = "name";
-    name.textContent = a.name;
+    name.textContent = a ? a.name : "(deleted activity)";
     const meta = document.createElement("div");
     meta.className = "meta";
     const endLabel = e.end ? fmtClock(e.end) : "now";
     meta.textContent = `${fmtClock(e.start)} – ${endLabel}`;
     center.append(name, meta);
+    if (e.tags && e.tags.length) {
+      const tags = document.createElement("div");
+      tags.className = "tags";
+      for (const t of e.tags) {
+        const chip = document.createElement("span");
+        chip.className = "tag-chip";
+        chip.textContent = "#" + t;
+        tags.appendChild(chip);
+      }
+      center.appendChild(tags);
+    }
 
     const dur = document.createElement("div");
     dur.className = "dur";
     if (e.end === null) dur.dataset.live = "1";
     dur.dataset.entryId = e.id;
-    dur.textContent = fmtDuration(durationOf(e));
+    const ms = e.end ? (new Date(e.end) - new Date(e.start)) : (Date.now() - new Date(e.start).getTime());
+    dur.textContent = fmtDuration(ms);
 
     const actions = document.createElement("div");
     actions.className = "actions";
-
-    const editBtn = document.createElement("button");
-    editBtn.className = "icon-btn";
-    editBtn.title = "Edit";
-    editBtn.textContent = "Edit";
-    editBtn.addEventListener("click", () => openEditEntry(e.id));
-
+    if (e.end !== null) {
+      const editBtn = document.createElement("button");
+      editBtn.className = "icon-btn";
+      editBtn.textContent = "Edit";
+      editBtn.addEventListener("click", () => openEditEntry(e.id, proj));
+      actions.appendChild(editBtn);
+    }
     const delBtn = document.createElement("button");
     delBtn.className = "icon-btn danger";
     delBtn.title = "Delete entry";
@@ -626,73 +1627,73 @@
     delBtn.addEventListener("click", () => {
       if (confirm("Delete this entry?")) deleteEntry(e.id);
     });
-
-    if (e.end !== null) actions.appendChild(editBtn);
     actions.appendChild(delBtn);
 
     row.append(dot, center, dur, actions);
     return row;
   }
 
-  function openEditEntry(id) {
+  function openEditEntry(id, project) {
     const e = state.entries.find(x => x.id === id);
     if (!e || e.end === null) return;
     const row = document.querySelector(`.entry[data-entry-id="${id}"]`);
     if (!row) return;
+    const acts = project ? activitiesOfProject(project.id) : state.activities;
     const editor = buildEntryEditor({
+      activities: acts,
       activityId: e.activityId,
       dateStr: isoToDateInput(e.start),
       startTime: fmtClock(e.start),
       endTime: fmtClock(e.end),
+      tags: (e.tags || []).join(", "),
       onCancel: () => render(),
-      onSave: ({ activityId, dateStr, startTime, endTime }) => {
+      onSave: ({ activityId, dateStr, startTime, endTime, tags }) => {
         const start = combineDateTime(dateStr, startTime);
         const end = combineDateTime(dateStr, endTime);
-        return updateEntry(id, { activityId, start, end });
-      }
+        return updateEntry(id, { activityId, start, end, tags: parseTags(tags) });
+      },
     });
     row.replaceWith(editor);
   }
 
-  function buildEntryEditor({ activityId, dateStr, startTime, endTime, onSave, onCancel }) {
+  function buildEntryEditor({ activities, activityId, dateStr, startTime, endTime, tags, onSave, onCancel }) {
     const wrap = document.createElement("div");
     wrap.className = "entry-edit";
 
     const actSel = document.createElement("select");
-    for (const a of state.activities) {
+    for (const a of activities) {
       const opt = document.createElement("option");
-      opt.value = a.id;
-      opt.textContent = a.name;
+      opt.value = a.id; opt.textContent = a.name;
       if (a.id === activityId) opt.selected = true;
       actSel.appendChild(opt);
     }
-
     const dateInp = document.createElement("input");
-    dateInp.type = "date";
-    dateInp.value = dateStr;
+    dateInp.type = "date"; dateInp.value = dateStr;
 
     const timeWrap = document.createElement("div");
     timeWrap.style.display = "flex";
     timeWrap.style.gap = "0.35rem";
     timeWrap.style.alignItems = "center";
     const startInp = document.createElement("input");
-    startInp.type = "time";
-    startInp.value = startTime;
+    startInp.type = "time"; startInp.value = startTime;
     const dash = document.createElement("span");
-    dash.textContent = "–";
-    dash.style.color = "var(--muted)";
+    dash.textContent = "–"; dash.style.color = "var(--muted)";
     const endInp = document.createElement("input");
-    endInp.type = "time";
-    endInp.value = endTime;
+    endInp.type = "time"; endInp.value = endTime;
     timeWrap.append(startInp, dash, endInp);
 
     const actions = document.createElement("div");
     actions.className = "row-actions";
     const saveBtn = document.createElement("button");
-    saveBtn.className = "primary";
-    saveBtn.textContent = "Save";
+    saveBtn.className = "primary"; saveBtn.textContent = "Save";
     const cancelBtn = document.createElement("button");
     cancelBtn.textContent = "Cancel";
+
+    const tagsInp = document.createElement("input");
+    tagsInp.type = "text";
+    tagsInp.className = "tags-input";
+    tagsInp.value = tags || "";
+    tagsInp.placeholder = "tags, comma-separated (e.g. Meetings, Deep Work)";
 
     const err = document.createElement("div");
     err.className = "err";
@@ -702,120 +1703,242 @@
         activityId: actSel.value,
         dateStr: dateInp.value,
         startTime: startInp.value,
-        endTime: endInp.value
+        endTime: endInp.value,
+        tags: tagsInp.value,
       });
       if (res && !res.ok) err.textContent = res.err;
     });
     cancelBtn.addEventListener("click", onCancel);
 
     actions.append(saveBtn, cancelBtn);
-    wrap.append(actSel, dateInp, timeWrap, actions);
+    wrap.append(actSel, dateInp, timeWrap, actions, tagsInp);
 
-    // err sits on its own visual row beneath the editor
     const container = document.createElement("div");
     container.appendChild(wrap);
     container.appendChild(err);
     return container;
   }
 
-  $("addEntryBtn").addEventListener("click", () => {
-    if (state.activities.length === 0) {
-      alert("Add an activity first.");
-      return;
+  // -------- project meta editor (inline within hero)
+  function openProjectMetaEditor(projectId, heroEl) {
+    const p = projectById(projectId);
+    if (!p) return;
+
+    const form = document.createElement("div");
+    form.className = "meta-form";
+
+    const nameL = document.createElement("label");
+    nameL.textContent = "Name";
+    const nameI = document.createElement("input");
+    nameI.type = "text"; nameI.value = p.name;
+    nameL.appendChild(nameI);
+
+    const stL = document.createElement("label");
+    stL.textContent = "Status";
+    const stI = document.createElement("select");
+    for (const s of STATUSES) {
+      const o = document.createElement("option");
+      o.value = s.value; o.textContent = s.label;
+      if (s.value === p.status) o.selected = true;
+      stI.appendChild(o);
     }
-    const btn = $("addEntryBtn");
-    const editor = buildEntryEditor({
-      activityId: state.activities[0].id,
-      dateStr: isoToDateInput(new Date().toISOString()),
-      startTime: "09:00",
-      endTime: "10:00",
-      onCancel: () => render(),
-      onSave: (vals) => addManualEntry(vals)
+    stL.appendChild(stI);
+
+    const dueL = document.createElement("label");
+    dueL.textContent = "Deadline";
+    const dueI = document.createElement("input");
+    dueI.type = "date";
+    dueI.value = p.deadline ? isoToDateInput(p.deadline) : "";
+    dueL.appendChild(dueI);
+
+    const estL = document.createElement("label");
+    estL.textContent = "Estimated hours";
+    const estI = document.createElement("input");
+    estI.type = "number"; estI.min = "0"; estI.step = "0.5";
+    estI.value = p.estimatedHours == null ? "" : p.estimatedHours;
+    estL.appendChild(estI);
+
+    const descL = document.createElement("label");
+    descL.className = "full";
+    descL.textContent = "Description";
+    const descI = document.createElement("textarea");
+    descI.value = p.description || "";
+    descL.appendChild(descI);
+
+    const rowActs = document.createElement("div");
+    rowActs.className = "row-actions";
+    const saveBtn = document.createElement("button");
+    saveBtn.className = "primary"; saveBtn.textContent = "Save";
+    const cancelBtn = document.createElement("button");
+    cancelBtn.textContent = "Cancel";
+    const moveBtn = document.createElement("button");
+    moveBtn.textContent = "Move portfolio…";
+    moveBtn.addEventListener("click", () => {
+      const others = state.portfolios.filter(x => x.id !== p.portfolioId);
+      if (others.length === 0) { alert("No other portfolio to move to."); return; }
+      const labels = others.map((x, i) => `${i + 1}. ${x.name}`).join("\n");
+      const pick = prompt(`Move to which portfolio?\n${labels}\n\nEnter the number:`);
+      const idx = parseInt(pick, 10);
+      if (!isNaN(idx) && idx >= 1 && idx <= others.length) {
+        updateProject(p.id, { portfolioId: others[idx - 1].id });
+        navigate({ name: "project", id: p.id });
+      }
     });
-    btn.replaceWith(editor);
-  });
 
-  // ----- weekly view -----
-  function renderWeek() {
-    const root = $("weekContent");
-    root.innerHTML = "";
-    if (state.activities.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "empty";
-      empty.textContent = "Add activities to see your week.";
-      root.appendChild(empty);
-      return;
-    }
-
-    const weekStart = startOfWeek(new Date());
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(weekStart);
-      d.setDate(weekStart.getDate() + i);
-      return d;
+    saveBtn.addEventListener("click", () => {
+      const est = estI.value.trim();
+      updateProject(p.id, {
+        name: (nameI.value || "").trim() || p.name,
+        status: stI.value,
+        deadline: dueI.value ? dateInputToIso(dueI.value) : null,
+        estimatedHours: est === "" ? null : Number(est),
+        description: descI.value,
+      });
+      render();
     });
+    cancelBtn.addEventListener("click", () => render());
+    rowActs.append(saveBtn, cancelBtn, moveBtn);
 
-    // axis row (day labels) at top
+    form.append(nameL, stL, dueL, estL, descL, rowActs);
+
+    // remove existing meta/desc/progress nodes and append form instead
+    const existing = heroEl.querySelector(".meta-form");
+    if (existing) existing.remove();
+    heroEl.appendChild(form);
+    nameI.focus();
+    nameI.select();
+  }
+
+  // -------- inline name adder
+  function inlineNameAdder(placeholder, btnLabel, onAdd) {
+    const wrap = document.createElement("div");
+    wrap.className = "add-row";
+    const input = document.createElement("input");
+    input.type = "text"; input.maxLength = 50;
+    input.placeholder = placeholder;
+    const btn = document.createElement("button");
+    btn.className = "primary";
+    btn.textContent = btnLabel;
+    btn.addEventListener("click", () => {
+      const v = input.value;
+      input.value = "";
+      onAdd(v);
+    });
+    input.addEventListener("keydown", (ev) => { if (ev.key === "Enter") btn.click(); });
+    wrap.append(input, btn);
+    return wrap;
+  }
+
+  function inlineProjectAdder(portfolioId, onDone) {
+    const wrap = document.createElement("div");
+    wrap.className = "add-row";
+    const input = document.createElement("input");
+    input.type = "text"; input.placeholder = "New project name…"; input.maxLength = 60;
+    const btn = document.createElement("button");
+    btn.className = "primary"; btn.textContent = "Add project";
+    btn.addEventListener("click", () => {
+      const v = input.value;
+      input.value = "";
+      const id = addProject(portfolioId, { name: v });
+      if (id) {
+        onDone();
+        // open the new project so the user can fill in meta
+        setTimeout(() => navigate({ name: "project", id }), 30);
+      }
+    });
+    input.addEventListener("keydown", (ev) => { if (ev.key === "Enter") btn.click(); });
+    wrap.append(input, btn);
+    return wrap;
+  }
+
+  // -------- week charts
+  function weekDays() {
+    const ws = startOfWeek(new Date());
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(ws); d.setDate(ws.getDate() + i); return d;
+    });
+  }
+
+  function renderWeekChartByPortfolio(parent) {
+    const days = weekDays();
+    const items = state.portfolios.map(p => {
+      const dayMs = days.map(d => totalForFilterOnDay(e => isActivityInPortfolio(e.activityId, p.id), d));
+      const weekMs = dayMs.reduce((s, x) => s + x, 0);
+      return { color: p.color, name: p.name, dayMs, weekMs, onClick: () => navigate({ name: "portfolio", id: p.id }) };
+    });
+    drawWeekChart(parent, items);
+  }
+  function renderWeekChartByProject(parent, projs) {
+    const days = weekDays();
+    const items = projs.map(p => {
+      const actIds = new Set(activitiesOfProject(p.id).map(a => a.id));
+      const dayMs = days.map(d => totalForFilterOnDay(e => actIds.has(e.activityId), d));
+      const weekMs = dayMs.reduce((s, x) => s + x, 0);
+      return { color: p.color, name: p.name, dayMs, weekMs, onClick: () => navigate({ name: "project", id: p.id }) };
+    });
+    drawWeekChart(parent, items);
+  }
+  function renderWeekChartByActivity(parent, acts) {
+    const days = weekDays();
+    const items = acts.map(a => {
+      const dayMs = days.map(d => totalForFilterOnDay(e => e.activityId === a.id, d));
+      const weekMs = dayMs.reduce((s, x) => s + x, 0);
+      return { color: a.color, name: a.name, dayMs, weekMs };
+    });
+    drawWeekChart(parent, items);
+  }
+  function drawWeekChart(parent, items) {
+    // axis
     const header = document.createElement("div");
     header.className = "week-grid";
     const sp1 = document.createElement("div");
     const axis = document.createElement("div");
     axis.className = "axis";
     const dayNames = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-    const today = startOfDay(new Date()).getTime();
-    days.forEach((d, i) => {
+    const todayMs = startOfDay(new Date()).getTime();
+    const ds = weekDays();
+    ds.forEach((d, i) => {
       const cell = document.createElement("div");
       cell.textContent = dayNames[i];
-      if (d.getTime() === today) {
-        cell.style.color = "var(--text)";
-        cell.style.fontWeight = "600";
-      }
+      if (d.getTime() === todayMs) cell.classList.add("today-cell");
       axis.appendChild(cell);
     });
     const sp2 = document.createElement("div");
+    sp2.className = "week-label";
     sp2.textContent = "Week";
-    sp2.style.color = "var(--muted)";
-    sp2.style.fontSize = "0.75rem";
-    sp2.style.textTransform = "uppercase";
-    sp2.style.letterSpacing = "0.06em";
     header.append(sp1, axis, sp2);
-    root.appendChild(header);
+    parent.appendChild(header);
 
-    // find max for scaling
     let max = 1;
-    const totalsByAct = state.activities.map(a => {
-      const dayMs = days.map(d => totalForActivityOnDay(a.id, d));
-      const m = Math.max(...dayMs);
-      if (m > max) max = m;
-      return { activity: a, dayMs, weekMs: dayMs.reduce((s, x) => s + x, 0) };
-    });
+    for (const it of items) for (const v of it.dayMs) if (v > max) max = v;
 
-    for (const t of totalsByAct) {
+    items.forEach((it, idx) => {
       const row = document.createElement("div");
       row.className = "week-row";
+      row.style.animationDelay = (idx * 30) + "ms";
+      if (it.onClick) { row.style.cursor = "pointer"; row.addEventListener("click", it.onClick); }
 
       const dot = document.createElement("span");
-      dot.className = "dot";
-      dot.style.background = t.activity.color;
+      dot.className = "dot"; dot.style.background = it.color;
 
       const center = document.createElement("div");
       const name = document.createElement("div");
-      name.className = "name";
-      name.textContent = t.activity.name;
+      name.className = "name"; name.textContent = it.name;
       const bars = document.createElement("div");
       bars.className = "bars";
-      t.dayMs.forEach((ms) => {
+      it.dayMs.forEach((ms) => {
         const col = document.createElement("div");
         col.className = "bar-col";
         const bar = document.createElement("div");
         bar.className = "bar";
+        bar.style.background = it.color;
+        bar.title = fmtHours(ms);
         if (ms <= 0) {
           bar.classList.add("zero");
         } else {
           const pct = Math.max(6, Math.round((ms / max) * 100));
-          bar.style.height = pct + "%";
+          requestAnimationFrame(() => { bar.style.height = pct + "%"; });
         }
-        bar.style.background = t.activity.color;
-        bar.title = `${fmtHours(ms)}`;
         col.appendChild(bar);
         bars.appendChild(col);
       });
@@ -823,31 +1946,72 @@
 
       const total = document.createElement("div");
       total.className = "total";
-      total.textContent = fmtHours(t.weekMs);
+      total.textContent = fmtHours(it.weekMs);
 
       row.append(dot, center, total);
-      root.appendChild(row);
-    }
+      parent.appendChild(row);
+    });
   }
 
-  // ----- live tick -----
+  // -------------------------------------------------------------------------
+  // makeCard helper (generic — currently used for portfolios on home)
+  // -------------------------------------------------------------------------
+  function makeCard({ color, title, right, subText, highlightId, delay, onClick }) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "card";
+    if (highlightId && highlightIds.has(highlightId)) btn.classList.add("new-row");
+    btn.style.animationDelay = ((delay || 0) * 30) + "ms";
+    btn.addEventListener("click", onClick);
+
+    const top = document.createElement("div");
+    top.className = "card-top";
+    const dot = document.createElement("span");
+    dot.className = "dot"; dot.style.background = color;
+    const t = document.createElement("span");
+    t.className = "title"; t.textContent = title;
+    const r = document.createElement("span");
+    r.className = "right"; r.textContent = right || "";
+    top.append(dot, t, r);
+    btn.appendChild(top);
+
+    if (subText) {
+      const sub = document.createElement("div");
+      sub.className = "sub";
+      sub.textContent = subText;
+      btn.appendChild(sub);
+    }
+    return btn;
+  }
+
+  // -------------------------------------------------------------------------
+  // misc helpers
+  // -------------------------------------------------------------------------
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  }
+
+  // -------------------------------------------------------------------------
+  // live tick
+  // -------------------------------------------------------------------------
   function tick() {
-    const running = getRunning();
-    if (!running) return;
-    // Update today's total for the running activity
-    const total = document.querySelector(`.today[data-activity-id="${running.activityId}"]`);
-    if (total) {
-      total.textContent = fmtDuration(totalForActivityOnDay(running.activityId, new Date()));
+    const r = getRunning();
+    if (!r) return;
+    // running bar live timer
+    const live = document.querySelector('.live[data-live="1"]');
+    if (live && live.dataset.entryId === r.id) {
+      live.textContent = fmtDuration(Date.now() - new Date(r.start).getTime());
     }
-    // Update the live entry duration
-    const live = document.querySelector(`.dur[data-live="1"][data-entry-id="${running.id}"]`);
-    if (live) {
-      live.textContent = fmtDuration(durationOf(running));
-    }
+    // entry-row live duration (in project view)
+    const durEl = document.querySelector(`.dur[data-live="1"][data-entry-id="${r.id}"]`);
+    if (durEl) durEl.textContent = fmtDuration(Date.now() - new Date(r.start).getTime());
+    // today counter for the running activity (project view)
+    const todayEl = document.querySelector(`.today[data-activity-id="${r.activityId}"]`);
+    if (todayEl) todayEl.textContent = fmtDuration(totalForFilterOnDay(e => e.activityId === r.activityId, new Date()));
   }
   setInterval(tick, 1000);
 
-  // re-render at midnight so date/today buckets stay correct
+  // re-render at midnight so day/week buckets stay correct
   function scheduleMidnightRender() {
     const now = new Date();
     const next = new Date(now);
@@ -856,16 +2020,9 @@
   }
   scheduleMidnightRender();
 
-  // ----- add-activity wiring -----
-  $("addActivityBtn").addEventListener("click", () => {
-    const name = $("newActivityName").value;
-    $("newActivityName").value = "";
-    addActivity(name);
-  });
-  $("newActivityName").addEventListener("keydown", (ev) => {
-    if (ev.key === "Enter") $("addActivityBtn").click();
-  });
-
+  // -------------------------------------------------------------------------
+  // initial paint
+  // -------------------------------------------------------------------------
   render();
 })();
 </script>
