@@ -1108,6 +1108,92 @@
     .brand-row { flex-direction: column; align-items: flex-start; gap: 0.35rem; }
     .header-right { align-items: center; }
   }
+
+  /* brand mark — clock icon + wordmark with subtle accent */
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .brand-logo {
+    width: 22px; height: 22px;
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .brand-logo svg { width: 100%; height: 100%; display: block; }
+  .brand-text { display: inline-flex; align-items: baseline; }
+  .brand-dot {
+    color: var(--accent);
+    font-weight: 700;
+    display: inline-block;
+    animation: brandDotPulse 3.2s ease-in-out infinite;
+    padding: 0 0.04em;
+  }
+  .brand-ai {
+    background: linear-gradient(120deg, var(--accent), #7c3aed);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+  }
+  @keyframes brandDotPulse {
+    0%, 100% { opacity: 0.45; }
+    50%      { opacity: 1; }
+  }
+
+  /* sync indicator — tiny status dot near the auth button */
+  .sync-indicator {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: transparent;
+    opacity: 0;
+    margin-right: 0.15rem;
+    align-self: center;
+    transition: background var(--t-base) var(--ease), opacity 600ms var(--ease);
+  }
+  .sync-indicator.syncing {
+    opacity: 1;
+    background: var(--muted);
+    animation: brandDotPulse 1.4s ease-in-out infinite;
+  }
+  .sync-indicator.synced {
+    opacity: 1;
+    background: var(--ok);
+    animation: none;
+  }
+  .sync-indicator.error {
+    opacity: 1;
+    background: var(--danger);
+    animation: none;
+  }
+
+  /* AI message refine controls (▲ more, ▼ alternate) */
+  .msg-refine {
+    display: flex;
+    gap: 0.1rem;
+    margin-top: 0.4rem;
+    margin-left: -0.2rem;
+  }
+  .refine-btn {
+    background: none;
+    border: none;
+    font-size: 0.78rem;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font: inherit;
+    line-height: 1;
+    transition: color var(--t-fast) var(--ease),
+                background var(--t-fast) var(--ease),
+                transform var(--t-fast) var(--ease);
+  }
+  .refine-btn:hover { color: var(--accent); background: var(--accent-soft); }
+  .refine-btn:active { transform: scale(0.9); }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
@@ -1115,8 +1201,19 @@
 <div class="wrap">
   <header class="app">
     <div class="brand-row">
-      <a class="brand" href="#/" id="brandLink">TimePlanner.AI</a>
+      <a class="brand" href="#/" id="brandLink" aria-label="TimePlanner.AI — home">
+        <span class="brand-logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+            <circle cx="12" cy="12" r="9.25" stroke-width="1.5"/>
+            <line x1="12" y1="4.5" x2="12" y2="8.5" stroke-width="2.2"/>
+            <circle cx="12" cy="10.4" r="1.05" fill="currentColor" stroke="none"/>
+            <circle cx="12" cy="12" r="0.7" fill="currentColor" stroke="none"/>
+          </svg>
+        </span>
+        <span class="brand-text">TimePlanner<span class="brand-dot">.</span><span class="brand-ai">AI</span></span>
+      </a>
       <div class="header-right">
+        <span id="syncIndicator" class="sync-indicator" aria-hidden="true" title=""></span>
         <button class="header-link" id="authLink" type="button" title="Sign in to sync your data">Sign in</button>
         <button class="ai-link" id="aiLink" type="button" title="Ask the planning guru">
           <span class="ai-dot"></span>AI
@@ -1604,18 +1701,18 @@
     el.innerHTML = "";
     const parts = [];
     if (view.name === "home") {
-      parts.push({ label: "Home", current: true });
+      parts.push({ label: "All", current: true });
     } else if (view.name === "reports") {
-      parts.push({ label: "Home", href: "#/" });
+      parts.push({ label: "All", href: "#/" });
       parts.push({ label: "Reports", current: true });
     } else if (view.name === "portfolio") {
-      parts.push({ label: "Home", href: "#/" });
+      parts.push({ label: "All", href: "#/" });
       const pf = portfolioById(view.id);
       parts.push({ label: pf ? pf.name : "?", current: true });
     } else if (view.name === "project") {
       const proj = projectById(view.id);
       const pf = proj ? portfolioById(proj.portfolioId) : null;
-      parts.push({ label: "Home", href: "#/" });
+      parts.push({ label: "All", href: "#/" });
       if (pf) parts.push({ label: pf.name, href: `#/p/${pf.id}` });
       parts.push({ label: proj ? proj.name : "?", current: true });
     }
@@ -3184,7 +3281,7 @@
       chatHistory.push({ role: "guru", text: greet, ts: Date.now() });
       saveChatHistory();
     }
-    for (const m of chatHistory) appendChatMessage(m.role, m.text, false);
+    for (const m of chatHistory) appendChatMessage(m.role, m.text, false, { trigger: m.trigger });
 
     renderChatSuggestions();
     return panel;
@@ -3245,13 +3342,59 @@
     setTimeout(() => {
       hideTyping();
       const reply = guruRespond(text);
-      appendChatMessage("guru", reply, true);
-      chatHistory.push({ role: "guru", text: reply, ts: Date.now() });
+      appendChatMessage("guru", reply, true, { trigger: text });
+      chatHistory.push({ role: "guru", text: reply, ts: Date.now(), trigger: text });
       saveChatHistory();
     }, 380 + Math.random() * 280);
   }
 
-  function appendChatMessage(role, text, animate) {
+  function refineGuru(direction, triggerText, prevReply) {
+    showTyping();
+    setTimeout(() => {
+      hideTyping();
+      const reply = direction === "up"
+        ? expandGuruResponse(triggerText, prevReply)
+        : alternativeGuruResponse(triggerText, prevReply);
+      appendChatMessage("guru", reply, true, { trigger: triggerText });
+      chatHistory.push({ role: "guru", text: reply, ts: Date.now(), trigger: triggerText });
+      saveChatHistory();
+    }, 300 + Math.random() * 220);
+  }
+
+  function expandGuruResponse(q, prev) {
+    const t = (q || "").toLowerCase();
+    const lead = "More on this:\n\n";
+    if (/focus|priorit|first|next/.test(t))       return lead + planningWisdom();
+    if (/plan|week|schedule|allocate/.test(t))    return lead + estimationWisdom();
+    if (/risk|behind|overload|stuck/.test(t))     return lead + deadlineWisdom();
+    if (/how am i|doing|status|progress/.test(t)) return lead + findRisks();
+    if (/overwhelm|stress|too much/.test(t))      return lead + suggestPriorities();
+    if (/estimat|hours|how long/.test(t))         return lead + deadlineWisdom();
+    if (/deadline|due/.test(t))                   return lead + estimationWisdom();
+    if (/activit/.test(t))                        return lead + portfolioWisdom();
+    if (/portfolio|group/.test(t))                return lead + activitiesWisdom();
+    return lead + diagnose();
+  }
+
+  function alternativeGuruResponse(q, prev) {
+    const t = (q || "").toLowerCase();
+    const lead = "Another angle:\n\n";
+    if (/focus|priorit|first|next/.test(t))       return lead + planWeek();
+    if (/plan|week|schedule|allocate/.test(t))    return lead + suggestPriorities();
+    if (/risk|behind|overload|stuck/.test(t))     return lead + overwhelmedAdvice();
+    if (/how am i|doing|status|progress/.test(t)) return lead + findRisks();
+    if (/overwhelm|stress|too much/.test(t))      return lead + diagnose();
+    if (/estimat|hours|how long/.test(t))         return lead + planningWisdom();
+    if (/deadline|due/.test(t))                   return lead + planningWisdom();
+    if (/activit/.test(t))                        return lead + planningWisdom();
+    if (/portfolio|group/.test(t))                return lead + planningWisdom();
+    // generic fallback — rotate wisdom variants
+    const variants = [planningWisdom(), estimationWisdom(), deadlineWisdom(), activitiesWisdom(), portfolioWisdom()];
+    return lead + variants[Math.floor(Math.random() * variants.length)];
+  }
+
+  function appendChatMessage(role, text, animate, opts) {
+    opts = opts || {};
     const body = document.getElementById("chatBody");
     if (!body) return;
     const row = document.createElement("div");
@@ -3266,6 +3409,20 @@
     const bubble = document.createElement("div");
     bubble.className = "bubble";
     bubble.innerHTML = formatGuruMessage(text);
+    if (role === "guru" && opts.trigger) {
+      const ctrls = document.createElement("div");
+      ctrls.className = "msg-refine";
+      const up = document.createElement("button");
+      up.type = "button"; up.className = "refine-btn";
+      up.textContent = "▲"; up.title = "More on this";
+      up.addEventListener("click", () => refineGuru("up", opts.trigger, text));
+      const down = document.createElement("button");
+      down.type = "button"; down.className = "refine-btn";
+      down.textContent = "▼"; down.title = "Try a different angle";
+      down.addEventListener("click", () => refineGuru("down", opts.trigger, text));
+      ctrls.append(up, down);
+      bubble.appendChild(ctrls);
+    }
     row.appendChild(bubble);
     body.appendChild(row);
     body.scrollTop = body.scrollHeight;
@@ -3711,9 +3868,25 @@
   let cloudPushTimer = null;
   let cloudPulling = false;
 
+  function setSyncStatus(s, label) {
+    const el = document.getElementById("syncIndicator");
+    if (!el) return;
+    el.classList.remove("syncing", "synced", "error");
+    if (s) el.classList.add(s);
+    el.title = label || "";
+    if (s === "synced") {
+      clearTimeout(setSyncStatus._t);
+      setSyncStatus._t = setTimeout(() => {
+        el.classList.remove("synced");
+        el.title = "";
+      }, 1600);
+    }
+  }
+
   function cloudPush() {
     if (!sb || !currentUser || cloudPulling) return;
     clearTimeout(cloudPushTimer);
+    setSyncStatus("syncing", "Syncing…");
     cloudPushTimer = setTimeout(async () => {
       try {
         const { error } = await sb.from("user_state").upsert({
@@ -3721,9 +3894,15 @@
           state,
           updated_at: new Date().toISOString(),
         });
-        if (error) console.error("Cloud push failed:", error);
+        if (error) {
+          console.error("Cloud push failed:", error);
+          setSyncStatus("error", "Sync failed");
+        } else {
+          setSyncStatus("synced", "Synced");
+        }
       } catch (err) {
         console.error("Cloud push failed:", err);
+        setSyncStatus("error", "Sync failed");
       }
     }, 800);
   }
@@ -3736,6 +3915,25 @@
         .select("state").eq("user_id", currentUser.id).maybeSingle();
       if (error) throw error;
       if (data && data.state) {
+        const localHasData = state.portfolios.length || state.projects.length || state.entries.length;
+        const differs = JSON.stringify(state) !== JSON.stringify(data.state);
+        if (localHasData && differs) {
+          const keepCloud = confirm(
+            "Cloud has data from another device that differs from this one.\n\n" +
+            "OK → replace local with cloud.\n" +
+            "Cancel → keep local and push it up instead."
+          );
+          if (!keepCloud) {
+            await sb.from("user_state").upsert({
+              user_id: currentUser.id,
+              state,
+              updated_at: new Date().toISOString(),
+            });
+            setSyncStatus("synced", "Synced");
+            toast("Pushed local data to the cloud");
+            return;
+          }
+        }
         state = data.state;
         for (const k of ["portfolios", "projects", "activities", "entries"]) {
           if (!Array.isArray(state[k])) state[k] = [];
@@ -3743,6 +3941,7 @@
         for (const e of state.entries) if (!Array.isArray(e.tags)) e.tags = [];
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         render();
+        setSyncStatus("synced", "Synced");
         toast("Loaded your saved data");
       } else {
         // first sign-in on this account — seed cloud with whatever's local
@@ -3751,10 +3950,12 @@
           state,
           updated_at: new Date().toISOString(),
         });
+        setSyncStatus("synced", "Synced");
         toast("Saved your data to the cloud");
       }
     } catch (err) {
       console.error("Cloud pull failed:", err);
+      setSyncStatus("error", "Sync failed");
       toast("Couldn't load saved data");
     } finally {
       cloudPulling = false;
