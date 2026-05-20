@@ -1461,8 +1461,73 @@
   .timeline-axis .axis-dates {
     display: flex; justify-content: space-between;
   }
+
+  /* drag and drop — grip handles, panel controls, ghost/drag states */
+  .drag-handle {
+    cursor: grab;
+    color: var(--muted);
+    padding: 0.15rem 0.25rem;
+    border-radius: 4px;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+    touch-action: none;
+  }
+  .drag-handle:hover { color: var(--text); background: var(--subtle); }
+  .drag-handle:active { cursor: grabbing; }
+  .drag-handle svg { display: block; }
+
+  .panel-header-controls {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.1rem;
+  }
+  .panel-min-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+    font: inherit;
+  }
+  .panel-min-btn:hover { color: var(--text); background: var(--subtle); }
+
+  /* minimized panels show only the header */
+  .panel-minimized > *:not(.section-head):not(h2) {
+    display: none !important;
+  }
+  .panel-minimized > .section-head { margin-bottom: 0; }
+  .panel-minimized h2 { opacity: 0.65; }
+
+  /* Sortable.js classes */
+  .sortable-ghost {
+    opacity: 0.35;
+    background: var(--accent-soft) !important;
+  }
+  .sortable-chosen { cursor: grabbing; }
+  .sortable-drag {
+    opacity: 0.95;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.18);
+    cursor: grabbing;
+  }
+
+  /* drag handle placement inside cards & rows */
+  .card .element-handle,
+  .activity .element-handle {
+    flex-shrink: 0;
+  }
+  .activity .element-handle { align-self: flex-start; margin-top: 0.2rem; }
+  .card-top .element-handle { margin-right: 0.1rem; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
   // Apply theme synchronously to avoid a flash of light theme on load
   (function () {
@@ -1550,7 +1615,7 @@
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
   function freshState() {
-    return { portfolios: [], projects: [], activities: [], entries: [] };
+    return { portfolios: [], projects: [], activities: [], entries: [], panelLayouts: {} };
   }
   function load() {
     try {
@@ -1573,6 +1638,8 @@
       for (const p of s.portfolios) if (!Array.isArray(p.dependencies)) p.dependencies = [];
       for (const p of s.projects)   if (!Array.isArray(p.dependencies)) p.dependencies = [];
       for (const a of s.activities) if (!Array.isArray(a.dependencies)) a.dependencies = [];
+      // panel layouts (per-view section order + minimized state)
+      if (!s.panelLayouts || typeof s.panelLayouts !== "object") s.panelLayouts = {};
       return s;
     } catch {
       return freshState();
@@ -2120,6 +2187,171 @@
   }
 
   // -------------------------------------------------------------------------
+  // drag and drop — panel layout + element reordering (Sortable.js)
+  // -------------------------------------------------------------------------
+  function gripSvg() {
+    return `<svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.3"/><circle cx="5" cy="8" r="1.3"/><circle cx="5" cy="13" r="1.3"/><circle cx="11" cy="3" r="1.3"/><circle cx="11" cy="8" r="1.3"/><circle cx="11" cy="13" r="1.3"/></svg>`;
+  }
+  function makeDragHandle(extraClass) {
+    const handle = document.createElement("span");
+    handle.className = "drag-handle " + (extraClass || "");
+    handle.title = "Drag to reorder";
+    handle.innerHTML = gripSvg();
+    // a non-drag click on the handle shouldn't trigger the parent card's click
+    handle.addEventListener("click", (e) => e.stopPropagation());
+    return handle;
+  }
+  function ensurePanelLayout(viewName) {
+    if (!state.panelLayouts[viewName]) {
+      state.panelLayouts[viewName] = { order: [], minimized: {} };
+    } else {
+      const l = state.panelLayouts[viewName];
+      if (!Array.isArray(l.order)) l.order = [];
+      if (!l.minimized || typeof l.minimized !== "object") l.minimized = {};
+    }
+    return state.panelLayouts[viewName];
+  }
+  function isPanelMinimized(viewName, panelId) {
+    const l = state.panelLayouts && state.panelLayouts[viewName];
+    return !!(l && l.minimized && l.minimized[panelId]);
+  }
+  function togglePanelMinimized(viewName, panelId) {
+    const layout = ensurePanelLayout(viewName);
+    layout.minimized[panelId] = !layout.minimized[panelId];
+    save();
+  }
+  function setPanelOrder(viewName, order) {
+    const layout = ensurePanelLayout(viewName);
+    layout.order = order;
+    save();
+  }
+  function applyPanelLayout(viewName, container) {
+    const layout = state.panelLayouts && state.panelLayouts[viewName];
+    const sections = [...container.querySelectorAll(":scope > section[data-panel-id]")];
+    if (!layout || !layout.order || layout.order.length === 0 || sections.length === 0) return;
+    const inDom = new Set(sections.map(s => s.dataset.panelId));
+    const finalOrder = [];
+    for (const id of layout.order) if (inDom.has(id)) finalOrder.push(id);
+    for (const s of sections) if (!finalOrder.includes(s.dataset.panelId)) finalOrder.push(s.dataset.panelId);
+    for (const id of finalOrder) {
+      const sec = container.querySelector(`:scope > section[data-panel-id="${id}"]`);
+      if (sec) container.appendChild(sec);
+    }
+  }
+  function decoratePanels(viewName, container) {
+    const sections = container.querySelectorAll(":scope > section[data-panel-id]");
+    for (const sec of sections) {
+      const panelId = sec.dataset.panelId;
+      if (sec.querySelector(":scope > .section-head > .panel-header-controls")) continue;
+
+      // find or wrap h2 in section-head
+      let head = sec.querySelector(":scope > .section-head");
+      if (!head) {
+        const h2 = sec.querySelector(":scope > h2");
+        if (!h2) continue;
+        head = document.createElement("div");
+        head.className = "section-head";
+        sec.insertBefore(head, h2);
+        head.appendChild(h2);
+      }
+
+      const ctrls = document.createElement("div");
+      ctrls.className = "panel-header-controls";
+
+      const minimized = isPanelMinimized(viewName, panelId);
+      const minBtn = document.createElement("button");
+      minBtn.type = "button";
+      minBtn.className = "panel-min-btn";
+      minBtn.innerHTML = minimized ? "+" : "−";
+      minBtn.title = minimized ? "Expand panel" : "Minimize panel";
+      minBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        togglePanelMinimized(viewName, panelId);
+        render();
+      });
+
+      const handle = document.createElement("span");
+      handle.className = "drag-handle panel-handle";
+      handle.title = "Drag to reorder panel";
+      handle.innerHTML = gripSvg();
+      handle.addEventListener("click", (e) => e.stopPropagation());
+
+      ctrls.append(minBtn, handle);
+      head.appendChild(ctrls);
+
+      if (minimized) sec.classList.add("panel-minimized");
+    }
+  }
+  function initPanelSortable(viewName, container) {
+    if (!window.Sortable) return;
+    if (!container.querySelector(":scope > section[data-panel-id]")) return;
+    Sortable.create(container, {
+      draggable: "section[data-panel-id]",
+      handle: ".panel-handle",
+      animation: 160,
+      ghostClass: "sortable-ghost",
+      chosenClass: "sortable-chosen",
+      dragClass: "sortable-drag",
+      onEnd: () => {
+        const order = [...container.querySelectorAll(":scope > section[data-panel-id]")]
+          .map(s => s.dataset.panelId);
+        setPanelOrder(viewName, order);
+      },
+    });
+  }
+  function reorderInGroup(arr, predicate, newGroupOrder) {
+    const positions = [];
+    arr.forEach((item, i) => { if (predicate(item)) positions.push(i); });
+    const result = [...arr];
+    newGroupOrder.forEach((item, k) => {
+      if (positions[k] != null && item) result[positions[k]] = item;
+    });
+    return result;
+  }
+  function initElementSortables(container) {
+    if (!window.Sortable) return;
+    const lists = container.querySelectorAll("[data-sortable-list]");
+    for (const list of lists) {
+      const key = list.dataset.sortableList;
+      Sortable.create(list, {
+        handle: ".element-handle",
+        animation: 160,
+        ghostClass: "sortable-ghost",
+        chosenClass: "sortable-chosen",
+        dragClass: "sortable-drag",
+        onEnd: () => {
+          if (key === "portfolios") {
+            const newIds = [...list.querySelectorAll("[data-portfolio-id]")].map(el => el.dataset.portfolioId);
+            state.portfolios.sort((a, b) => newIds.indexOf(a.id) - newIds.indexOf(b.id));
+            save();
+          } else if (key.startsWith("projects:")) {
+            const portfolioId = key.slice("projects:".length);
+            const newIds = [...list.querySelectorAll("[data-project-id]")].map(el => el.dataset.projectId);
+            const newProjects = newIds.map(id => projectById(id)).filter(Boolean);
+            state.projects = reorderInGroup(state.projects, p => p.portfolioId === portfolioId, newProjects);
+            save();
+          } else if (key.startsWith("activities:")) {
+            const projectId = key.slice("activities:".length);
+            const newIds = [...list.querySelectorAll("[data-activity-id]")].map(el => el.dataset.activityId);
+            const newActivities = newIds.map(id => activityById(id)).filter(Boolean);
+            state.activities = reorderInGroup(state.activities, a => a.projectId === projectId, newActivities);
+            save();
+          }
+        },
+      });
+    }
+  }
+  function applyDragAndDrop(viewName, container) {
+    decoratePanels(viewName, container);
+    applyPanelLayout(viewName, container);
+  }
+  function initSortablesAfterAttach(viewName, container) {
+    if (!window.Sortable) return;
+    initPanelSortable(viewName, container);
+    initElementSortables(container);
+  }
+
+  // -------------------------------------------------------------------------
   // rendering
   // -------------------------------------------------------------------------
   function render() {
@@ -2142,7 +2374,8 @@
     else if (view.name === "plan") renderPlanView(next);
     else if (view.name === "portfolio") renderPortfolioView(next, view.id);
     else if (view.name === "project") renderProjectView(next, view.id);
-    swap(root, next);
+    applyDragAndDrop(view.name, next);
+    swap(root, next, () => initSortablesAfterAttach(view.name, next));
 
     // toggle header link states
     const rl = $("reportsLink");
@@ -2157,9 +2390,9 @@
     });
   }
 
-  function swap(root, next) {
+  function swap(root, next, onDone) {
     const old = root.firstElementChild;
-    if (!old) { root.appendChild(next); return; }
+    if (!old) { root.appendChild(next); if (onDone) onDone(); return; }
     old.classList.add("leaving");
     let replaced = false;
     const finalize = () => {
@@ -2167,6 +2400,7 @@
       replaced = true;
       old.removeEventListener("animationend", finalize);
       root.replaceChildren(next);
+      if (onDone) onDone();
     };
     old.addEventListener("animationend", finalize);
     setTimeout(finalize, 200);
@@ -2259,6 +2493,7 @@
   // -------- Home view (portfolios)
   function renderHome(root) {
     const sec = document.createElement("section");
+    sec.dataset.panelId = "portfolios";
     const head = document.createElement("div");
     head.className = "section-head";
     head.innerHTML = `<h2>Portfolios</h2><span class="head-meta">${state.portfolios.length} total</span>`;
@@ -2266,6 +2501,7 @@
 
     const list = document.createElement("div");
     list.className = "card-list";
+    list.dataset.sortableList = "portfolios";
 
     if (state.portfolios.length === 0) {
       const empty = document.createElement("div");
@@ -2287,6 +2523,10 @@
           delay: i,
           onClick: () => navigate({ name: "portfolio", id: p.id }),
         });
+        card.dataset.portfolioId = p.id;
+        // insert a drag handle at the start of the card-top
+        const top = card.querySelector(".card-top");
+        if (top) top.insertBefore(makeDragHandle("element-handle"), top.firstChild);
         list.appendChild(card);
       });
       sec.appendChild(list);
@@ -2302,6 +2542,7 @@
     // Cross-portfolio week chart, if there's anything to show
     if (state.portfolios.length > 0 && state.activities.length > 0) {
       const chartSec = document.createElement("section");
+      chartSec.dataset.panelId = "home-week-chart";
       const h = document.createElement("h2");
       h.textContent = "This week, by portfolio";
       chartSec.appendChild(h);
@@ -2376,6 +2617,7 @@
 
     // projects
     const sec = document.createElement("section");
+    sec.dataset.panelId = "portfolio-projects";
     const head = document.createElement("div");
     head.className = "section-head";
     head.innerHTML = `<h2>Projects</h2>`;
@@ -2389,6 +2631,7 @@
     } else {
       const list = document.createElement("div");
       list.className = "card-list";
+      list.dataset.sortableList = "projects:" + portfolioId;
       projs.forEach((proj, i) => list.appendChild(buildProjectCard(proj, i)));
       sec.appendChild(list);
     }
@@ -2400,6 +2643,7 @@
     // weekly chart for this portfolio
     if (projs.length > 0) {
       const chartSec = document.createElement("section");
+      chartSec.dataset.panelId = "portfolio-week-chart";
       const h = document.createElement("h2");
       h.textContent = "This week, by project";
       chartSec.appendChild(h);
@@ -2420,12 +2664,14 @@
     const card = document.createElement("button");
     card.type = "button";
     card.className = "card";
+    card.dataset.projectId = proj.id;
     if (highlightIds.has(proj.id)) card.classList.add("new-row");
     card.style.animationDelay = (idx * 30) + "ms";
     card.addEventListener("click", () => navigate({ name: "project", id: proj.id }));
 
     const top = document.createElement("div");
     top.className = "card-top";
+    const handle = makeDragHandle("element-handle");
     const dot = document.createElement("span");
     dot.className = "dot"; dot.style.background = proj.color;
     const title = document.createElement("span");
@@ -2434,7 +2680,7 @@
     const right = document.createElement("span");
     right.className = "right";
     right.textContent = fmtHours(weekMs) + " / wk";
-    top.append(dot, title, right);
+    top.append(handle, dot, title, right);
     card.appendChild(top);
 
     const sub = document.createElement("div");
@@ -2587,12 +2833,14 @@
 
     // Activities
     const actSec = document.createElement("section");
+    actSec.dataset.panelId = "project-activities";
     const actHead = document.createElement("div");
     actHead.className = "section-head";
     actHead.innerHTML = `<h2>Activities</h2>`;
     actSec.appendChild(actHead);
 
     const actList = document.createElement("div");
+    actList.dataset.sortableList = "activities:" + proj.id;
     if (acts.length === 0) {
       const empty = document.createElement("div");
       empty.className = "empty";
@@ -2612,6 +2860,7 @@
 
     // Today's entries (this project)
     const entSec = document.createElement("section");
+    entSec.dataset.panelId = "project-today-entries";
     const entHead = document.createElement("div");
     entHead.className = "section-head";
     entHead.innerHTML = `<h2>Today's entries</h2>`;
@@ -2651,6 +2900,7 @@
     // Weekly chart by activity (within project)
     if (acts.length > 0) {
       const chartSec = document.createElement("section");
+      chartSec.dataset.panelId = "project-week-chart";
       const h = document.createElement("h2");
       h.textContent = "This week, by activity";
       chartSec.appendChild(h);
@@ -2662,11 +2912,14 @@
   function buildActivityRow(a, running, idx) {
     const row = document.createElement("div");
     row.className = "activity";
+    row.dataset.activityId = a.id;
     if (highlightIds.has(a.id)) row.classList.add("new-row");
     row.style.animationDelay = (idx * 30) + "ms";
 
     const isRunning = running && running.activityId === a.id;
     if (isRunning) row.classList.add("running");
+
+    const handle = makeDragHandle("element-handle");
 
     const dot = document.createElement("span");
     dot.className = "dot"; dot.style.background = a.color;
@@ -2728,7 +2981,7 @@
     del.addEventListener("click", () => deleteActivity(a.id));
 
     actions.append(toggle, editBtn, del);
-    row.append(dot, center, today, actions);
+    row.append(handle, dot, center, today, actions);
     return row;
   }
 
@@ -3379,6 +3632,10 @@
     }
 
     const kpiSec = document.createElement("section");
+    kpiSec.dataset.panelId = "reports-kpi";
+    const kpiH = document.createElement("h2");
+    kpiH.textContent = "Highlights";
+    kpiSec.appendChild(kpiH);
     const kpiGrid = document.createElement("div");
     kpiGrid.className = "stat-grid";
     appendStatCard(kpiGrid, "Total time", fmtHours(totalMs), entries.length + " entr" + (entries.length === 1 ? "y" : "ies"));
@@ -3391,6 +3648,7 @@
     // daily bars
     if (bounds.days > 0) {
       const chartSec = document.createElement("section");
+      chartSec.dataset.panelId = "reports-daily";
       const h = document.createElement("h2");
       h.textContent = "Daily hours";
       chartSec.appendChild(h);
@@ -3401,6 +3659,7 @@
     // by activity
     if (allActsInRange.size > 0) {
       const sec = document.createElement("section");
+      sec.dataset.panelId = "reports-by-activity";
       const h = document.createElement("h2");
       h.textContent = "By activity";
       sec.appendChild(h);
@@ -3427,6 +3686,7 @@
     }
     if (projTotals.size > 0) {
       const sec = document.createElement("section");
+      sec.dataset.panelId = "reports-by-project";
       const h = document.createElement("h2");
       h.textContent = "By project";
       sec.appendChild(h);
@@ -3450,6 +3710,7 @@
       : state.projects;
     if (inScopeProjects.length > 0) {
       const sec = document.createElement("section");
+      sec.dataset.panelId = "reports-status";
       const h = document.createElement("h2");
       h.textContent = "Project status";
       sec.appendChild(h);
@@ -3465,6 +3726,7 @@
     }
     if (tagMs.size > 0) {
       const sec = document.createElement("section");
+      sec.dataset.panelId = "reports-tags";
       const h = document.createElement("h2");
       h.textContent = "Top tags";
       sec.appendChild(h);
@@ -3483,6 +3745,7 @@
 
     // export & import
     const exSec = document.createElement("section");
+    exSec.dataset.panelId = "reports-export";
     const h = document.createElement("h2");
     h.textContent = "Export & import";
     exSec.appendChild(h);
@@ -3804,6 +4067,7 @@
       for (const p of state.portfolios) { if (typeof p.notes !== "string") p.notes = ""; if (!Array.isArray(p.dependencies)) p.dependencies = []; }
       for (const p of state.projects)   { if (!Array.isArray(p.dependencies)) p.dependencies = []; }
       for (const a of state.activities) { if (typeof a.notes !== "string") a.notes = ""; if (!Array.isArray(a.dependencies)) a.dependencies = []; }
+      if (!state.panelLayouts || typeof state.panelLayouts !== "object") state.panelLayouts = {};
       save();
       render();
       toast("Imported backup");
@@ -3958,6 +4222,7 @@
     }
 
     const breakdownSec = document.createElement("section");
+    breakdownSec.dataset.panelId = "plan-breakdown";
     const h = document.createElement("h2");
     h.textContent = "Breakdown";
     breakdownSec.appendChild(h);
@@ -3979,6 +4244,7 @@
         if (pBlock.p.deadline) dated.push(pBlock.p);
     if (dated.length >= 1) {
       const tlSec = document.createElement("section");
+      tlSec.dataset.panelId = "plan-timeline";
       const th = document.createElement("h2");
       th.textContent = "Timeline";
       tlSec.appendChild(th);
@@ -3988,6 +4254,7 @@
 
     // export
     const exSec = document.createElement("section");
+    exSec.dataset.panelId = "plan-export";
     const eh = document.createElement("h2");
     eh.textContent = "Export plan";
     exSec.appendChild(eh);
@@ -5035,6 +5302,7 @@
         for (const p of state.portfolios) if (!Array.isArray(p.dependencies)) p.dependencies = [];
         for (const p of state.projects)   if (!Array.isArray(p.dependencies)) p.dependencies = [];
         for (const a of state.activities) if (!Array.isArray(a.dependencies)) a.dependencies = [];
+        if (!state.panelLayouts || typeof state.panelLayouts !== "object") state.panelLayouts = {};
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         render();
         setSyncStatus("synced", "Synced");
