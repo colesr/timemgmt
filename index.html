@@ -1109,6 +1109,7 @@
     .header-right { align-items: center; }
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -1116,6 +1117,7 @@
     <div class="brand-row">
       <a class="brand" href="#/" id="brandLink">TimePlanner.AI</a>
       <div class="header-right">
+        <button class="header-link" id="authLink" type="button" title="Sign in to sync your data">Sign in</button>
         <button class="ai-link" id="aiLink" type="button" title="Ask the planning guru">
           <span class="ai-dot"></span>AI
         </button>
@@ -1132,6 +1134,22 @@
 <script>
 (() => {
   "use strict";
+
+  // -------------------------------------------------------------------------
+  // cloud sync configuration — fill these in with your Supabase project values
+  // get them from https://supabase.com/dashboard/project/_/settings/api
+  // schema:
+  //   create table user_state (
+  //     user_id uuid primary key references auth.users(id) on delete cascade,
+  //     state jsonb not null,
+  //     updated_at timestamptz default now()
+  //   );
+  //   alter table user_state enable row level security;
+  //   create policy "own row" on user_state
+  //     for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  // -------------------------------------------------------------------------
+  const SUPABASE_URL = "https://gknrtzblookomnxrjthr.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrbnJ0emJsb29rb21ueHJqdGhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMzc5NTQsImV4cCI6MjA5NDgxMzk1NH0.8wYdRrWpgB2yVfyVKA-b1p0nUFb1oCIxtS6phaFm7zk";
 
   // -------------------------------------------------------------------------
   // storage & state
@@ -1178,6 +1196,7 @@
   }
   function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    cloudPush();
   }
 
   let state = load();
@@ -3682,9 +3701,123 @@
   scheduleMidnightRender();
 
   // -------------------------------------------------------------------------
+  // cloud sync (Supabase) — auth + debounced state push, pull on sign-in
+  // -------------------------------------------------------------------------
+  const cloudEnabled = !SUPABASE_URL.startsWith("YOUR_") && !SUPABASE_ANON_KEY.startsWith("YOUR_");
+  const sb = (cloudEnabled && window.supabase)
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+  let currentUser = null;
+  let cloudPushTimer = null;
+  let cloudPulling = false;
+
+  function cloudPush() {
+    if (!sb || !currentUser || cloudPulling) return;
+    clearTimeout(cloudPushTimer);
+    cloudPushTimer = setTimeout(async () => {
+      try {
+        const { error } = await sb.from("user_state").upsert({
+          user_id: currentUser.id,
+          state,
+          updated_at: new Date().toISOString(),
+        });
+        if (error) console.error("Cloud push failed:", error);
+      } catch (err) {
+        console.error("Cloud push failed:", err);
+      }
+    }, 800);
+  }
+
+  async function cloudPull() {
+    if (!sb || !currentUser) return;
+    cloudPulling = true;
+    try {
+      const { data, error } = await sb.from("user_state")
+        .select("state").eq("user_id", currentUser.id).maybeSingle();
+      if (error) throw error;
+      if (data && data.state) {
+        state = data.state;
+        for (const k of ["portfolios", "projects", "activities", "entries"]) {
+          if (!Array.isArray(state[k])) state[k] = [];
+        }
+        for (const e of state.entries) if (!Array.isArray(e.tags)) e.tags = [];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        render();
+        toast("Loaded your saved data");
+      } else {
+        // first sign-in on this account — seed cloud with whatever's local
+        await sb.from("user_state").upsert({
+          user_id: currentUser.id,
+          state,
+          updated_at: new Date().toISOString(),
+        });
+        toast("Saved your data to the cloud");
+      }
+    } catch (err) {
+      console.error("Cloud pull failed:", err);
+      toast("Couldn't load saved data");
+    } finally {
+      cloudPulling = false;
+    }
+  }
+
+  async function signIn() {
+    if (!sb) {
+      alert("Cloud sync isn't configured.\n\nEdit index.html and set SUPABASE_URL and SUPABASE_ANON_KEY near the top of the script.");
+      return;
+    }
+    const email = prompt("Enter your email — we'll send a sign-in link:");
+    if (!email) return;
+    const { error } = await sb.auth.signInWithOtp({
+      email: email.trim(),
+      options: { emailRedirectTo: window.location.href },
+    });
+    if (error) alert("Sign-in failed: " + error.message);
+    else toast("Check your email for the sign-in link");
+  }
+
+  async function signOut() {
+    if (!sb) return;
+    if (!confirm("Sign out? Your data stays on this device.")) return;
+    await sb.auth.signOut();
+  }
+
+  function renderAuthUI() {
+    const btn = document.getElementById("authLink");
+    if (!btn) return;
+    if (currentUser) {
+      const email = currentUser.email || "Signed in";
+      btn.textContent = email.length > 20 ? email.slice(0, 18) + "…" : email;
+      btn.title = "Signed in — click to sign out";
+      btn.onclick = signOut;
+      btn.classList.add("active");
+    } else {
+      btn.textContent = cloudEnabled ? "Sign in" : "Sign in (setup needed)";
+      btn.title = cloudEnabled ? "Sign in to sync your data across devices" : "Cloud sync not configured — see SUPABASE_URL in the source";
+      btn.onclick = signIn;
+      btn.classList.remove("active");
+    }
+  }
+
+  if (sb) {
+    sb.auth.getSession().then(({ data }) => {
+      currentUser = data.session ? data.session.user : null;
+      renderAuthUI();
+      if (currentUser) cloudPull();
+    });
+    sb.auth.onAuthStateChange((_evt, session) => {
+      const wasUser = currentUser;
+      currentUser = session ? session.user : null;
+      renderAuthUI();
+      if (currentUser && !wasUser) cloudPull();
+    });
+  }
+
+  // -------------------------------------------------------------------------
   // initial paint
   // -------------------------------------------------------------------------
   render();
+  renderAuthUI();
 })();
 </script>
 </body>
